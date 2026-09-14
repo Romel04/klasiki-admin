@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { CategoryForm } from "@/components/categories/category-form";
 import { useCategory, useUpdateCategory } from "@/lib/hooks/use-categories";
 import type { CategoryFormValues } from "@/lib/validators/category";
@@ -28,7 +29,13 @@ export default function EditCategoryPage({ params }: EditCategoryPageProps) {
         },
       },
       {
-        onSuccess: () => router.push("/categories"),
+        onSuccess: (updated) => {
+          toast.success(`Category "${updated.name}" updated successfully`);
+          router.push("/categories");
+        },
+        onError: (err) => {
+          toast.error(err instanceof Error ? err.message : "Failed to update category");
+        },
       },
     );
   }

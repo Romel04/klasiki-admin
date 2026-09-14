@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from "sonner";
 import { useCategories, useDeleteCategory } from "@/lib/hooks/use-categories";
 import { useProducts } from "@/lib/hooks/use-products";
 import { Button } from "@/components/ui/button";
@@ -108,7 +109,18 @@ export default function CategoriesPage() {
                           `Delete category "${name}"? Subcategories will be unlinked.`,
                         )
                       ) {
-                        deleteCategory.mutate(id);
+                        deleteCategory.mutate(id, {
+                          onSuccess: () => {
+                            toast.success(`Category "${name}" deleted successfully`);
+                          },
+                          onError: (err) => {
+                            toast.error(
+                              err instanceof Error
+                                ? err.message
+                                : "Failed to delete category",
+                            );
+                          },
+                        });
                       }
                     }}
                   />

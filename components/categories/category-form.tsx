@@ -18,6 +18,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -115,13 +116,14 @@ export function CategoryForm({
             });
           }}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Select parent category" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-72">
             <SelectItem value="none">
               None (Top-level Category)
             </SelectItem>
+            {eligibleParents.length > 0 && <SelectSeparator />}
             {eligibleParents.map((parent) => (
               <SelectItem key={parent.id} value={parent.id}>
                 {parent.name}

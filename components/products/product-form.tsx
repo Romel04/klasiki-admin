@@ -16,7 +16,10 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -41,18 +44,6 @@ export function ProductForm({
 
   const topLevelCategories = categories?.filter((c) => !c.parentId) || [];
   const subcategories = categories?.filter((c) => c.parentId) || [];
-
-  const categoryOptions = topLevelCategories.flatMap((parent) => {
-    const children = subcategories.filter((c) => c.parentId === parent.id);
-    return [
-      { id: parent.id, label: parent.name, isParent: true },
-      ...children.map((child) => ({
-        id: child.id,
-        label: `${parent.name} → ${child.name}`,
-        isParent: false,
-      })),
-    ];
-  });
 
   const {
     register,
@@ -114,7 +105,7 @@ export function ProductForm({
             value={watch("categoryId")}
             onValueChange={(value) => setValue("categoryId", value ?? "")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue
                 placeholder={
                   isCategoriesLoading
@@ -123,23 +114,42 @@ export function ProductForm({
                 }
               />
             </SelectTrigger>
-            <SelectContent>
-              {categoryOptions.length === 0 ? (
-                <div className="p-2 text-xs text-muted-foreground">
+            <SelectContent className="max-h-80">
+              {isCategoriesLoading ? (
+                <div className="p-3 text-sm text-muted-foreground">
+                  Loading categories...
+                </div>
+              ) : topLevelCategories.length === 0 ? (
+                <div className="p-3 text-sm text-muted-foreground">
                   No categories found
                 </div>
               ) : (
-                categoryOptions.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
-                    <span
-                      className={
-                        cat.isParent ? "font-semibold" : "pl-2 text-foreground/90"
-                      }
-                    >
-                      {cat.label}
-                    </span>
-                  </SelectItem>
-                ))
+                topLevelCategories.map((parent, idx) => {
+                  const children = subcategories.filter(
+                    (c) => c.parentId === parent.id,
+                  );
+                  return (
+                    <SelectGroup key={parent.id}>
+                      {idx > 0 && <SelectSeparator />}
+                      <SelectLabel>
+                        {parent.name}
+                      </SelectLabel>
+                      <SelectItem value={parent.id} className="font-medium">
+                        {parent.name} (General)
+                      </SelectItem>
+                      {children.map((child) => (
+                        <SelectItem
+                          key={child.id}
+                          value={child.id}
+                          className="pl-6 text-foreground/90"
+                        >
+                          <span className="text-muted-foreground/60 mr-1.5 select-none">↳</span>
+                          <span>{child.name}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  );
+                })
               )}
             </SelectContent>
           </Select>

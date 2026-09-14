@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { CategoryForm } from "@/components/categories/category-form";
 import { useCreateCategory } from "@/lib/hooks/use-categories";
 import type { CategoryFormValues } from "@/lib/validators/category";
@@ -21,8 +22,12 @@ function NewCategoryContent() {
         parentId: values.parentId,
       },
       {
-        onSuccess: () => {
+        onSuccess: (cat) => {
+          toast.success(`Category "${cat.name}" created successfully`);
           router.push("/categories");
+        },
+        onError: (err) => {
+          toast.error(err instanceof Error ? err.message : "Failed to create category");
         },
       },
     );
