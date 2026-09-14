@@ -1,9 +1,8 @@
 import type { Product, CreateProductInput } from "@/types/product";
-import { MOCK_PRODUCTS, setMockProducts } from "./mock-data";
+import { MOCK_PRODUCTS, setMockProducts, MOCK_CATEGORIES } from "./mock-data";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
-const MOCK_CATEGORY_NAME = "Bags"; // matches the mock category used in the form for now
 
 export async function getProducts(): Promise<Product[]> {
   if (USE_MOCKS) return MOCK_PRODUCTS;
@@ -27,10 +26,11 @@ export async function getProduct(id: string): Promise<Product> {
 
 export async function createProduct(data: CreateProductInput): Promise<Product> {
   if (USE_MOCKS) {
+    const matchedCategory = MOCK_CATEGORIES.find((c) => c.id === data.categoryId);
     const newProduct: Product = {
       ...data,
       id: crypto.randomUUID(),
-      categoryName: MOCK_CATEGORY_NAME,
+      categoryName: matchedCategory ? matchedCategory.name : "Uncategorized",
       createdAt: new Date().toISOString(),
     };
     setMockProducts([...MOCK_PRODUCTS, newProduct]);
@@ -51,7 +51,12 @@ export async function updateProduct(id: string, data: Partial<CreateProductInput
   if (USE_MOCKS) {
     const index = MOCK_PRODUCTS.findIndex((p) => p.id === id);
     if (index === -1) throw new Error("Product not found");
-    const updated = { ...MOCK_PRODUCTS[index], ...data };
+    let categoryName = MOCK_PRODUCTS[index].categoryName;
+    if (data.categoryId) {
+      const matched = MOCK_CATEGORIES.find((c) => c.id === data.categoryId);
+      if (matched) categoryName = matched.name;
+    }
+    const updated = { ...MOCK_PRODUCTS[index], ...data, categoryName };
     const next = [...MOCK_PRODUCTS];
     next[index] = updated;
     setMockProducts(next);

@@ -23,11 +23,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PlusSignIcon, Delete02Icon } from "@hugeicons/core-free-icons";
 
-// Replace with real categories once the categories endpoint exists
-const MOCK_CATEGORIES = [
-  { id: "cat-1", name: "Bags" },
-  { id: "cat-2", name: "Totes" },
-];
+import { useCategories } from "@/lib/hooks/use-categories";
 
 interface ProductFormProps {
   defaultValues?: Partial<ProductFormInput>;
@@ -41,6 +37,23 @@ export function ProductForm({
   isSubmitting,
 }: ProductFormProps) {
   const router = useRouter();
+  const { data: categories, isLoading: isCategoriesLoading } = useCategories();
+
+  const topLevelCategories = categories?.filter((c) => !c.parentId) || [];
+  const subcategories = categories?.filter((c) => c.parentId) || [];
+
+  const categoryOptions = topLevelCategories.flatMap((parent) => {
+    const children = subcategories.filter((c) => c.parentId === parent.id);
+    return [
+      { id: parent.id, label: parent.name, isParent: true },
+      ...children.map((child) => ({
+        id: child.id,
+        label: `${parent.name} → ${child.name}`,
+        isParent: false,
+      })),
+    ];
+  });
+
   const {
     register,
     handleSubmit,
@@ -48,7 +61,7 @@ export function ProductForm({
     watch,
     setValue,
     formState: { errors },
-  } = useForm<ProductFormInput, any, ProductFormValues>({
+  } = useForm<ProductFormInput, unknown, ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: "",
@@ -102,14 +115,32 @@ export function ProductForm({
             onValueChange={(value) => setValue("categoryId", value ?? "")}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a category" />
+              <SelectValue
+                placeholder={
+                  isCategoriesLoading
+                    ? "Loading categories..."
+                    : "Select a category"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              {MOCK_CATEGORIES.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
+              {categoryOptions.length === 0 ? (
+                <div className="p-2 text-xs text-muted-foreground">
+                  No categories found
+                </div>
+              ) : (
+                categoryOptions.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    <span
+                      className={
+                        cat.isParent ? "font-semibold" : "pl-2 text-foreground/90"
+                      }
+                    >
+                      {cat.label}
+                    </span>
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
           {errors.categoryId && (
