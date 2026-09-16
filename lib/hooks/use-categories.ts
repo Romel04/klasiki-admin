@@ -6,7 +6,7 @@ import {
   updateCategory,
   deleteCategory,
 } from "@/lib/api/categories";
-import type { CreateCategoryInput } from "@/types/category";
+import type { UpdateCategoryInput } from "@/types/category";
 
 export function useCategories() {
   return useQuery({
@@ -36,8 +36,7 @@ export function useCreateCategory() {
 export function useUpdateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateCategoryInput> }) =>
-      updateCategory(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateCategoryInput }) => updateCategory(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     },

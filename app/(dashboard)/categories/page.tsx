@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useCategories, useDeleteCategory } from "@/lib/hooks/use-categories";
@@ -14,6 +15,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PlusSignIcon,
@@ -26,11 +38,20 @@ export default function CategoriesPage() {
   const { data: categories, isPending, error } = useCategories();
   const { data: products } = useProducts();
   const deleteCategory = useDeleteCategory();
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+    isParent: boolean;
+  } | null>(null);
 
   if (isPending)
-    return <p className="text-sm text-muted-foreground">Loading categories...</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Loading categories...</p>
+    );
   if (error)
-    return <p className="text-sm text-destructive">Failed to load categories.</p>;
+    return (
+      <p className="text-sm text-destructive">Failed to load categories.</p>
+    );
 
   // Separate parents and group children
   const topLevelCategories = categories?.filter((c) => !c.parentId) || [];
@@ -59,7 +80,8 @@ export default function CategoriesPage() {
         <div>
           <h1 className="text-lg font-semibold">Categories</h1>
           <p className="text-xs text-muted-foreground">
-            Manage product collections, parent categories, and nested subcategories.
+            Manage product collections, parent categories, and nested
+            subcategories.
           </p>
         </div>
         <Link href="/categories/new">
@@ -75,11 +97,11 @@ export default function CategoriesPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[300px]">Name</TableHead>
-              <TableHead>Slug</TableHead>
+              {/* <TableHead>Slug</TableHead> */}
               <TableHead>Type</TableHead>
               <TableHead>Products</TableHead>
               <TableHead className="max-w-[280px]">Description</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -89,7 +111,8 @@ export default function CategoriesPage() {
                   colSpan={6}
                   className="text-center py-8 text-sm text-muted-foreground"
                 >
-                  No categories found. Click &quot;Add Category&quot; to create your first one.
+                  No categories found. Click &quot;Add Category&quot; to create
+                  your first one.
                 </TableCell>
               </TableRow>
             ) : (
@@ -103,35 +126,9 @@ export default function CategoriesPage() {
                     parent={parent}
                     subcategories={children}
                     productCount={productCount}
-                    onDelete={(id, name) => {
-                      if (
-                        confirm(
-                          `Delete category "${name}"? Subcategories will be unlinked.`,
-                        )
-                      ) {
-                        deleteCategory.mutate(id, {
-                          onSuccess: () => {
-                            toast.error(`Category "${name}" deleted successfully`, {
-                              icon: (
-                                <HugeiconsIcon
-                                  icon={Delete02Icon}
-                                  size={16}
-                                  strokeWidth={2}
-                                  className="size-4 text-destructive shrink-0"
-                                />
-                              ),
-                            });
-                          },
-                          onError: (err) => {
-                            toast.error(
-                              err instanceof Error
-                                ? err.message
-                                : "Failed to delete category",
-                            );
-                          },
-                        });
-                      }
-                    }}
+                    onDelete={(id, name, isParent) =>
+                      setDeleteTarget({ id, name, isParent })
+                    }
                   />
                 );
               })
@@ -139,6 +136,68 @@ export default function CategoriesPage() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{deleteTarget?.name}&quot;?
+              {deleteTarget?.isParent
+                ? " Nested subcategories will be unlinked."
+                : " This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteCategory.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteCategory.isPending}
+              onClick={() => {
+                if (!deleteTarget) return;
+                deleteCategory.mutate(deleteTarget.id, {
+                  onSuccess: () => {
+                    toast.error(
+                      `Category "${deleteTarget.name}" deleted successfully`,
+                      {
+                        icon: (
+                          <HugeiconsIcon
+                            icon={Delete02Icon}
+                            size={16}
+                            strokeWidth={2}
+                            className="size-4 text-destructive shrink-0"
+                          />
+                        ),
+                      },
+                    );
+                    setDeleteTarget(null);
+                  },
+                  onError: (err) => {
+                    toast.error(
+                      err instanceof Error
+                        ? err.message
+                        : "Failed to delete category",
+                    );
+                  },
+                });
+              }}
+            >
+              {deleteCategory.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -147,7 +206,7 @@ interface TableRowGroupProps {
   parent: import("@/types/category").Category;
   subcategories: import("@/types/category").Category[];
   productCount: number;
-  onDelete: (id: string, name: string) => void;
+  onDelete: (id: string, name: string, isParent: boolean) => void;
 }
 
 function TableRowGroup({
@@ -170,12 +229,13 @@ function TableRowGroup({
             <span>{parent.name}</span>
           </div>
         </TableCell>
-        <TableCell className="text-xs font-mono text-muted-foreground">
+        {/* <TableCell className="text-xs font-mono text-muted-foreground">
           /{parent.slug}
-        </TableCell>
+        </TableCell> */}
         <TableCell>
           <Badge variant="outline" className="bg-background text-[11px]">
-            {subcategories.length} {subcategories.length === 1 ? "subcategory" : "subcategories"}
+            {subcategories.length}{" "}
+            {subcategories.length === 1 ? "subcategory" : "subcategories"}
           </Badge>
         </TableCell>
         <TableCell className="text-xs text-muted-foreground">
@@ -197,7 +257,12 @@ function TableRowGroup({
             </Button>
           </Link>
           <Link href={`/categories/${parent.id}/edit`}>
-            <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
+              title="Edit"
+            >
               <HugeiconsIcon icon={PencilEdit01Icon} size={15} />
             </Button>
           </Link>
@@ -206,7 +271,7 @@ function TableRowGroup({
             variant="ghost"
             className="h-7 w-7"
             title="Delete"
-            onClick={() => onDelete(parent.id, parent.name)}
+            onClick={() => onDelete(parent.id, parent.name, true)}
           >
             <HugeiconsIcon
               icon={Delete02Icon}
@@ -226,9 +291,9 @@ function TableRowGroup({
               <span>{child.name}</span>
             </div>
           </TableCell>
-          <TableCell className="text-xs font-mono text-muted-foreground">
+          {/* <TableCell className="text-xs font-mono text-muted-foreground">
             /{child.slug}
-          </TableCell>
+          </TableCell> */}
           <TableCell>
             <span className="text-[11px] text-muted-foreground">
               Under {parent.name}
@@ -240,7 +305,12 @@ function TableRowGroup({
           </TableCell>
           <TableCell className="text-right space-x-1">
             <Link href={`/categories/${child.id}/edit`}>
-              <Button size="icon" variant="ghost" className="h-7 w-7" title="Edit">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7"
+                title="Edit"
+              >
                 <HugeiconsIcon icon={PencilEdit01Icon} size={15} />
               </Button>
             </Link>
@@ -249,7 +319,7 @@ function TableRowGroup({
               variant="ghost"
               className="h-7 w-7"
               title="Delete"
-              onClick={() => onDelete(child.id, child.name)}
+              onClick={() => onDelete(child.id, child.name, false)}
             >
               <HugeiconsIcon
                 icon={Delete02Icon}

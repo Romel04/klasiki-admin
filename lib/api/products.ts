@@ -1,13 +1,13 @@
 import type { Product, CreateProductInput } from "@/types/product";
 import { MOCK_PRODUCTS, setMockProducts, MOCK_CATEGORIES } from "./mock-data";
+import { apiFetch } from "@/lib/api/http";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 
 export async function getProducts(): Promise<Product[]> {
   if (USE_MOCKS) return MOCK_PRODUCTS;
 
-  const res = await fetch(`${API_URL}/products`, { credentials: "include" });
+  const res = await apiFetch("/products");
   if (!res.ok) throw new Error("Failed to fetch products");
   return res.json();
 }
@@ -19,7 +19,7 @@ export async function getProduct(id: string): Promise<Product> {
     return found;
   }
 
-  const res = await fetch(`${API_URL}/products/${id}`, { credentials: "include" });
+  const res = await apiFetch(`/products/${id}`);
   if (!res.ok) throw new Error("Failed to fetch product");
   return res.json();
 }
@@ -37,10 +37,9 @@ export async function createProduct(data: CreateProductInput): Promise<Product> 
     return newProduct;
   }
 
-  const res = await fetch(`${API_URL}/products`, {
+  const res = await apiFetch("/products", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed to create product");
@@ -63,10 +62,9 @@ export async function updateProduct(id: string, data: Partial<CreateProductInput
     return updated;
   }
 
-  const res = await fetch(`${API_URL}/products/${id}`, {
+  const res = await apiFetch(`/products/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed to update product");
@@ -79,9 +77,6 @@ export async function deleteProduct(id: string): Promise<void> {
     return;
   }
 
-  const res = await fetch(`${API_URL}/products/${id}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
+  const res = await apiFetch(`/products/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete product");
 }

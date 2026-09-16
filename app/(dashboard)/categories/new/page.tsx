@@ -17,9 +17,8 @@ function NewCategoryContent() {
     createCategory.mutate(
       {
         name: values.name,
-        slug: values.slug,
-        description: values.description,
         parentId: values.parentId,
+        imageUrl: values.imageUrl || undefined,
       },
       {
         onSuccess: (cat) => {
@@ -27,7 +26,9 @@ function NewCategoryContent() {
           router.push("/categories");
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to create category");
+          toast.error(
+            err instanceof Error ? err.message : "Failed to create category",
+          );
         },
       },
     );
@@ -56,7 +57,11 @@ function NewCategoryContent() {
 
 export default function NewCategoryPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-muted-foreground">Loading form...</p>}>
+    <Suspense
+      fallback={
+        <p className="text-sm text-muted-foreground">Loading form...</p>
+      }
+    >
       <NewCategoryContent />
     </Suspense>
   );

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useProducts, useDeleteProduct } from "@/lib/hooks/use-products";
+import type { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +15,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PlusSignIcon,
@@ -23,6 +36,7 @@ import {
 export default function ProductsPage() {
   const { data: products, isPending, error } = useProducts();
   const deleteProduct = useDeleteProduct();
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   if (isPending)
     return <p className="text-sm text-muted-foreground">Loading products...</p>;
@@ -90,34 +104,8 @@ export default function ProductsPage() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => {
-                        if (confirm(`Delete "${product.name}"?`)) {
-                          deleteProduct.mutate(product.id, {
-                            onSuccess: () => {
-                              toast.error(
-                                `Product "${product.name}" deleted successfully`,
-                                {
-                                  icon: (
-                                    <HugeiconsIcon
-                                      icon={Delete02Icon}
-                                      size={16}
-                                      strokeWidth={2}
-                                      className="size-4 text-destructive shrink-0"
-                                    />
-                                  ),
-                                },
-                              );
-                            },
-                            onError: (err) => {
-                              toast.error(
-                                err instanceof Error
-                                  ? err.message
-                                  : "Failed to delete product",
-                              );
-                            },
-                          });
-                        }
-                      }}
+                      title="Delete product"
+                      onClick={() => setProductToDelete(product)}
                     >
                       <HugeiconsIcon
                         icon={Delete02Icon}
@@ -132,6 +120,66 @@ export default function ProductsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog
+        open={!!productToDelete}
+        onOpenChange={(open) => {
+          if (!open) setProductToDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <HugeiconsIcon icon={Delete02Icon} size={16} strokeWidth={2} />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{productToDelete?.name}&quot;?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteProduct.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteProduct.isPending}
+              onClick={() => {
+                if (!productToDelete) return;
+                deleteProduct.mutate(productToDelete.id, {
+                  onSuccess: () => {
+                    toast.error(
+                      `Product "${productToDelete.name}" deleted successfully`,
+                      {
+                        icon: (
+                          <HugeiconsIcon
+                            icon={Delete02Icon}
+                            size={16}
+                            strokeWidth={2}
+                            className="size-4 text-destructive shrink-0"
+                          />
+                        ),
+                      },
+                    );
+                    setProductToDelete(null);
+                  },
+                  onError: (err) => {
+                    toast.error(
+                      err instanceof Error
+                        ? err.message
+                        : "Failed to delete product",
+                    );
+                  },
+                });
+              }}
+            >
+              {deleteProduct.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

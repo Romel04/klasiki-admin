@@ -23,9 +23,8 @@ export default function EditCategoryPage({ params }: EditCategoryPageProps) {
         id,
         data: {
           name: values.name,
-          slug: values.slug,
-          description: values.description,
           parentId: values.parentId,
+          imageUrl: values.imageUrl || undefined,
         },
       },
       {
@@ -34,7 +33,9 @@ export default function EditCategoryPage({ params }: EditCategoryPageProps) {
           router.push("/categories");
         },
         onError: (err) => {
-          toast.error(err instanceof Error ? err.message : "Failed to update category");
+          toast.error(
+            err instanceof Error ? err.message : "Failed to update category",
+          );
         },
       },
     );
@@ -61,9 +62,8 @@ export default function EditCategoryPage({ params }: EditCategoryPageProps) {
         categoryId={category.id}
         defaultValues={{
           name: category.name,
-          slug: category.slug,
-          description: category.description || "",
           parentId: category.parentId || null,
+          imageUrl: category.imageUrl || "",
         }}
         onSubmit={handleSubmit}
         isSubmitting={updateCategory.isPending}
