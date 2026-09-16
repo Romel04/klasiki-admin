@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ProductForm } from "@/components/products/product-form";
 import { useCreateProduct } from "@/lib/hooks/use-products";
 import type { ProductFormValues } from "@/lib/validators/product";
@@ -23,7 +24,17 @@ export default function NewProductPage() {
           stock: v.stock,
         })),
       },
-      { onSuccess: () => router.push("/products") },
+      {
+        onSuccess: (product) => {
+          toast.success(`Product "${product.name}" created successfully`);
+          router.push("/products");
+        },
+        onError: (err) => {
+          toast.error(
+            err instanceof Error ? err.message : "Failed to create product",
+          );
+        },
+      },
     );
   }
 

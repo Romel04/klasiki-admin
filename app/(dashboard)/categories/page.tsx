@@ -111,7 +111,16 @@ export default function CategoriesPage() {
                       ) {
                         deleteCategory.mutate(id, {
                           onSuccess: () => {
-                            toast.success(`Category "${name}" deleted successfully`);
+                            toast.error(`Category "${name}" deleted successfully`, {
+                              icon: (
+                                <HugeiconsIcon
+                                  icon={Delete02Icon}
+                                  size={16}
+                                  strokeWidth={2}
+                                  className="size-4 text-destructive shrink-0"
+                                />
+                              ),
+                            });
                           },
                           onError: (err) => {
                             toast.error(

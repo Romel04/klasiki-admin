@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { toast } from "sonner";
 import { useProducts, useDeleteProduct } from "@/lib/hooks/use-products";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -90,8 +91,32 @@ export default function ProductsPage() {
                       size="icon"
                       variant="ghost"
                       onClick={() => {
-                        if (confirm(`Delete "${product.name}"?`))
-                          deleteProduct.mutate(product.id);
+                        if (confirm(`Delete "${product.name}"?`)) {
+                          deleteProduct.mutate(product.id, {
+                            onSuccess: () => {
+                              toast.error(
+                                `Product "${product.name}" deleted successfully`,
+                                {
+                                  icon: (
+                                    <HugeiconsIcon
+                                      icon={Delete02Icon}
+                                      size={16}
+                                      strokeWidth={2}
+                                      className="size-4 text-destructive shrink-0"
+                                    />
+                                  ),
+                                },
+                              );
+                            },
+                            onError: (err) => {
+                              toast.error(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Failed to delete product",
+                              );
+                            },
+                          });
+                        }
                       }}
                     >
                       <HugeiconsIcon

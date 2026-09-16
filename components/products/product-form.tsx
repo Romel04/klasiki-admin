@@ -34,6 +34,51 @@ interface ProductFormProps {
   isSubmitting?: boolean;
 }
 
+function sanitizePrice(value: string): string {
+  // Remove any character that is not a digit or decimal point
+  let clean = value.replace(/[^0-9.]/g, "");
+
+  // Only allow a single decimal point
+  const dotIndex = clean.indexOf(".");
+  if (dotIndex !== -1) {
+    clean =
+      clean.slice(0, dotIndex + 1) +
+      clean.slice(dotIndex + 1).replace(/\./g, "");
+  }
+
+  // If starts with ".", prepend 0
+  if (clean.startsWith(".")) {
+    clean = "0" + clean;
+  }
+
+  // Handle leading zeroes
+  if (clean.includes(".")) {
+    const [intPart, decPart] = clean.split(".");
+    const normalizedInt = intPart.replace(/^0+(?=\d)/, "");
+    clean = (normalizedInt || "0") + "." + decPart;
+  } else {
+    // Integer only: remove leading zeroes (e.g. "05" -> "5", "00" -> "0")
+    if (clean.length > 1 && clean.startsWith("0")) {
+      clean = clean.replace(/^0+/, "") || "0";
+    }
+  }
+
+  return clean;
+}
+
+function sanitizeStock(value: string): string {
+  // Stock cannot have decimals, signs, symbols or letters: whole numbers only
+  const integerOnly = value.split(".")[0];
+  let clean = integerOnly.replace(/[^0-9]/g, "");
+
+  // Strip leading zeroes (e.g. "05" -> "5", "00" -> "0")
+  if (clean.length > 1 && clean.startsWith("0")) {
+    clean = clean.replace(/^0+/, "") || "0";
+  }
+
+  return clean;
+}
+
 export function ProductForm({
   defaultValues,
   onSubmit,
@@ -57,10 +102,10 @@ export function ProductForm({
     defaultValues: {
       name: "",
       description: "",
-      price: 0,
+      price: "" as unknown as number,
       categoryId: "",
       isFeatured: false,
-      variants: [{ color: "", stock: 0 }],
+      variants: [{ color: "", stock: "" as unknown as number }],
       ...defaultValues,
     },
   });
@@ -69,6 +114,96 @@ export function ProductForm({
     control,
     name: "variants",
   });
+
+  const handlePriceKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow navigation and system shortcuts
+    if (
+      e.key === "Backspace" ||
+      e.key === "Delete" ||
+      e.key === "Tab" ||
+      e.key === "Escape" ||
+      e.key === "Enter" ||
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowRight" ||
+      e.key === "ArrowUp" ||
+      e.key === "ArrowDown" ||
+      e.key === "Home" ||
+      e.key === "End" ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return;
+    }
+
+    // Disallow typing 0 if the field already has a lone 0
+    if (e.key === "0" && e.currentTarget.value === "0") {
+      e.preventDefault();
+      return;
+    }
+
+    // If the field is currently just "0", typing 1-9 replaces the 0
+    if (e.currentTarget.value === "0" && /^[1-9]$/.test(e.key)) {
+      e.currentTarget.value = "";
+      return;
+    }
+
+    // Allow decimal point only if not already present
+    if (e.key === "." && !e.currentTarget.value.includes(".")) {
+      return;
+    }
+
+    // Allow digits 0-9
+    if (/^[0-9]$/.test(e.key)) {
+      return;
+    }
+
+    // Block everything else (+, -, e, E, letters, symbols, second dot)
+    e.preventDefault();
+  };
+
+  const handleStockKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow navigation and system shortcuts
+    if (
+      e.key === "Backspace" ||
+      e.key === "Delete" ||
+      e.key === "Tab" ||
+      e.key === "Escape" ||
+      e.key === "Enter" ||
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowRight" ||
+      e.key === "ArrowUp" ||
+      e.key === "ArrowDown" ||
+      e.key === "Home" ||
+      e.key === "End" ||
+      e.ctrlKey ||
+      e.metaKey
+    ) {
+      return;
+    }
+
+    // Disallow typing 0 if the field already has a lone 0
+    if (e.key === "0" && e.currentTarget.value === "0") {
+      e.preventDefault();
+      return;
+    }
+
+    // If the field is currently just "0", typing 1-9 replaces the 0
+    if (e.currentTarget.value === "0" && /^[1-9]$/.test(e.key)) {
+      e.currentTarget.value = "";
+      return;
+    }
+
+    // Allow digits 0-9 only (no dot, no signs, no letters)
+    if (/^[0-9]$/.test(e.key)) {
+      return;
+    }
+
+    // Block everything else
+    e.preventDefault();
+  };
+
+  const { onChange: onPriceChange, onBlur: onPriceBlur, ...priceRegister } =
+    register("price");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
@@ -93,7 +228,25 @@ export function ProductForm({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
           <Label>Price (৳)</Label>
-          <Input type="number" step="0.01" {...register("price")} />
+          <Input
+            type="number"
+            step="any"
+            min="0"
+            placeholder="0.00"
+            {...priceRegister}
+            onChange={(e) => {
+              const clean = sanitizePrice(e.target.value);
+              e.target.value = clean;
+              onPriceChange(e);
+            }}
+            onBlur={(e) => {
+              if (e.target.value.endsWith(".")) {
+                e.target.value = e.target.value.slice(0, -1);
+              }
+              onPriceBlur(e);
+            }}
+            onKeyDown={handlePriceKeyDown}
+          />
           {errors.price && (
             <p className="text-xs text-destructive">{errors.price.message}</p>
           )}
@@ -176,43 +329,56 @@ export function ProductForm({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => append({ color: "", stock: 0 })}
+            onClick={() => append({ color: "", stock: "" as unknown as number })}
           >
             <HugeiconsIcon icon={PlusSignIcon} size={14} />
             Add Color
           </Button>
         </div>
 
-        {fields.map((field, index) => (
-          <div key={field.id} className="flex items-center gap-2">
-            <div className="flex-1">
-              <Input
-                placeholder="e.g. Tan"
-                {...register(`variants.${index}.color`)}
-              />
+        {fields.map((field, index) => {
+          const { onChange: onStockChange, ...stockRegister } =
+            register(`variants.${index}.stock`);
+
+          return (
+            <div key={field.id} className="flex items-center gap-2">
+              <div className="flex-1">
+                <Input
+                  placeholder="e.g. Tan"
+                  {...register(`variants.${index}.color`)}
+                />
+              </div>
+              <div className="w-28">
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  {...stockRegister}
+                  onChange={(e) => {
+                    const clean = sanitizeStock(e.target.value);
+                    e.target.value = clean;
+                    onStockChange(e);
+                  }}
+                  onKeyDown={handleStockKeyDown}
+                />
+              </div>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                disabled={fields.length === 1}
+                onClick={() => remove(index)}
+              >
+                <HugeiconsIcon
+                  icon={Delete02Icon}
+                  size={16}
+                  className="text-destructive"
+                />
+              </Button>
             </div>
-            <div className="w-28">
-              <Input
-                type="number"
-                placeholder="Stock"
-                {...register(`variants.${index}.stock`)}
-              />
-            </div>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              disabled={fields.length === 1}
-              onClick={() => remove(index)}
-            >
-              <HugeiconsIcon
-                icon={Delete02Icon}
-                size={16}
-                className="text-destructive"
-              />
-            </Button>
-          </div>
-        ))}
+          );
+        })}
         {errors.variants && (
           <p className="text-xs text-destructive">{errors.variants.message}</p>
         )}

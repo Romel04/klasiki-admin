@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ProductForm } from "@/components/products/product-form";
 import { useProduct, useUpdateProduct } from "@/lib/hooks/use-products";
 import type { ProductFormValues } from "@/lib/validators/product";
@@ -33,7 +34,17 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           })),
         },
       },
-      { onSuccess: () => router.push("/products") },
+      {
+        onSuccess: (updated) => {
+          toast.success(`Product "${updated.name}" updated successfully`);
+          router.push("/products");
+        },
+        onError: (err) => {
+          toast.error(
+            err instanceof Error ? err.message : "Failed to update product",
+          );
+        },
+      },
     );
   }
 
