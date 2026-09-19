@@ -105,7 +105,7 @@ export function ProductForm({
       price: "" as unknown as number,
       categoryId: "",
       isFeatured: false,
-      variants: [{ color: "", stock: "" as unknown as number }],
+      variants: [{ id: `new-${crypto.randomUUID()}`, color: "", stock: "" as unknown as number }],
       ...defaultValues,
     },
   });
@@ -329,7 +329,13 @@ export function ProductForm({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => append({ color: "", stock: "" as unknown as number })}
+            onClick={() =>
+              append({
+                id: `new-${crypto.randomUUID()}`,
+                color: "",
+                stock: "" as unknown as number,
+              })
+            }
           >
             <HugeiconsIcon icon={PlusSignIcon} size={14} />
             Add Color
@@ -342,6 +348,7 @@ export function ProductForm({
 
           return (
             <div key={field.id} className="flex items-center gap-2">
+              <input type="hidden" {...register(`variants.${index}.id`)} />
               <div className="flex-1">
                 <Input
                   placeholder="e.g. Tan"

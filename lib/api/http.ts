@@ -41,3 +41,25 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 
   return res;
 }
+
+// Every endpoint (confirmed live against GET /products) wraps its payload in
+// this envelope instead of returning the array/object directly — so every
+// call site needs to unwrap `.data`, not just auth.ts.
+export interface ApiEnvelope<T> {
+  status: number;
+  success: boolean;
+  message: string;
+  data: T;
+  pagination?: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export async function apiJson<T>(
+  path: string,
+  init: RequestInit = {},
+  errorMessage = "Request failed",
+): Promise<T> {
+  const res = await apiFetch(path, init);
+  if (!res.ok) throw new Error(errorMessage);
+  const json: ApiEnvelope<T> = await res.json();
+  return json.data;
+}

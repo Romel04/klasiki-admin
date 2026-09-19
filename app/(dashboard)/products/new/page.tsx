@@ -19,7 +19,7 @@ export default function NewProductPage() {
         categoryId: values.categoryId,
         isFeatured: values.isFeatured,
         variants: values.variants.map((v) => ({
-          id: crypto.randomUUID(),
+          id: v.id ?? `new-${crypto.randomUUID()}`,
           color: v.color,
           stock: v.stock,
         })),

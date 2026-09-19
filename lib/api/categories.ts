@@ -1,6 +1,6 @@
 import type { Category, CreateCategoryInput, UpdateCategoryInput } from "@/types/category";
 import { MOCK_CATEGORIES, setMockCategories } from "./mock-data";
-import { apiFetch } from "@/lib/api/http";
+import { apiFetch, apiJson } from "@/lib/api/http";
 
 const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 
@@ -34,9 +34,7 @@ function toApiPayload(data: Partial<CreateCategoryInput & { isActive: boolean }>
 export async function getCategories(): Promise<Category[]> {
   if (USE_MOCKS) return MOCK_CATEGORIES;
 
-  const res = await apiFetch("/categories");
-  if (!res.ok) throw new Error("Failed to fetch categories");
-  const data: ApiCategory[] = await res.json();
+  const data = await apiJson<ApiCategory[]>("/categories", {}, "Failed to fetch categories");
   return data.map(fromApi);
 }
 
@@ -47,9 +45,7 @@ export async function getCategory(id: string): Promise<Category> {
     return found;
   }
 
-  const res = await apiFetch(`/categories/${id}`);
-  if (!res.ok) throw new Error("Failed to fetch category");
-  const data: ApiCategory = await res.json();
+  const data = await apiJson<ApiCategory>(`/categories/${id}`, {}, "Failed to fetch category");
   return fromApi(data);
 }
 
@@ -64,13 +60,15 @@ export async function createCategory(data: CreateCategoryInput): Promise<Categor
     return newCategory;
   }
 
-  const res = await apiFetch("/categories", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(toApiPayload(data)),
-  });
-  if (!res.ok) throw new Error("Failed to create category");
-  const created: ApiCategory = await res.json();
+  const created = await apiJson<ApiCategory>(
+    "/categories",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toApiPayload(data)),
+    },
+    "Failed to create category",
+  );
   return fromApi(created);
 }
 
@@ -90,13 +88,15 @@ export async function updateCategory(id: string, data: UpdateCategoryInput): Pro
     return updated;
   }
 
-  const res = await apiFetch(`/categories/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(toApiPayload(data)),
-  });
-  if (!res.ok) throw new Error("Failed to update category");
-  const updated: ApiCategory = await res.json();
+  const updated = await apiJson<ApiCategory>(
+    `/categories/${id}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(toApiPayload(data)),
+    },
+    "Failed to update category",
+  );
   return fromApi(updated);
 }
 

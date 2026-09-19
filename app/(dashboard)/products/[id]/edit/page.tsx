@@ -18,6 +18,13 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   const updateProduct = useUpdateProduct();
 
   function handleSubmit(values: ProductFormValues) {
+    const submittedIds = new Set(
+      values.variants.map((v) => v.id).filter((vid): vid is string => !!vid),
+    );
+    const removedVariantIds = (product?.variants ?? [])
+      .map((v) => v.id)
+      .filter((vid) => !submittedIds.has(vid));
+
     updateProduct.mutate(
       {
         id,
@@ -27,11 +34,12 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           price: values.price,
           categoryId: values.categoryId,
           isFeatured: values.isFeatured,
-          variants: values.variants.map((v, index) => ({
-            id: product?.variants[index]?.id ?? crypto.randomUUID(),
+          variants: values.variants.map((v) => ({
+            id: v.id ?? `new-${crypto.randomUUID()}`,
             color: v.color,
             stock: v.stock,
           })),
+          removedVariantIds,
         },
       },
       {
@@ -68,6 +76,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           categoryId: product.categoryId,
           isFeatured: product.isFeatured,
           variants: product.variants.map((v) => ({
+            id: v.id,
             color: v.color,
             stock: v.stock,
           })),

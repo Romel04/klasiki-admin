@@ -69,10 +69,7 @@ export default function ProductsPage() {
           </TableHeader>
           <TableBody>
             {products?.map((product) => {
-              const totalStock = product.variants.reduce(
-                (sum, v) => sum + v.stock,
-                0,
-              );
+              const totalStock = product.stockQty;
               return (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
@@ -134,8 +131,8 @@ export default function ProductsPage() {
             </AlertDialogMedia>
             <AlertDialogTitle>Delete Product</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete &quot;{productToDelete?.name}&quot;?
-              This action cannot be undone.
+              Are you sure you want to delete &quot;{productToDelete?.name}
+              &quot;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

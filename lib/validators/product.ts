@@ -1,6 +1,10 @@
 import { z } from "zod";
 
 export const productVariantSchema = z.object({
+  // Real backend id (numeric string) for an existing variant, or a client-side
+  // "new-…" placeholder for a variant added in this session that doesn't exist
+  // on the server yet. Used by the API layer to decide POST vs PATCH vs DELETE.
+  id: z.string().optional(),
   color: z.string().min(1, "Color name is required"),
   stock: z.coerce.number().int().min(0, "Stock can't be negative"),
 });

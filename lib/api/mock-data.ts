@@ -122,6 +122,7 @@ export let MOCK_PRODUCTS: Product[] = [
       { id: "v1", color: "Tan", stock: 8 },
       { id: "v2", color: "Black", stock: 3 },
     ],
+    stockQty: 11,
     createdAt: new Date().toISOString(),
   },
   {
@@ -136,6 +137,7 @@ export let MOCK_PRODUCTS: Product[] = [
       { id: "v3", color: "Black", stock: 0 },
       { id: "v4", color: "Olive", stock: 12 },
     ],
+    stockQty: 12,
     createdAt: new Date().toISOString(),
   },
   {
@@ -147,6 +149,7 @@ export let MOCK_PRODUCTS: Product[] = [
     categoryName: "Crossbody",
     isFeatured: true,
     variants: [{ id: "v5", color: "Tan", stock: 2 }],
+    stockQty: 2,
     createdAt: new Date().toISOString(),
   },
 ];
