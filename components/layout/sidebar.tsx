@@ -12,6 +12,7 @@ import {
   UserGroupIcon,
   Clock01Icon,
   Settings01Icon,
+  ShoppingCartAdd01Icon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-context";
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/products", label: "Products", icon: PackageIcon },
   { href: "/categories", label: "Categories", icon: Folder01Icon },
   { href: "/orders", label: "Orders", icon: ClipboardIcon },
+  { href: "/preorders", label: "Pre-orders", icon: ShoppingCartAdd01Icon },
   { href: "/users", label: "Users", icon: UserGroupIcon },
   { href: "/activity-log", label: "Activity Log", icon: Clock01Icon },
   { href: "/settings", label: "Settings", icon: Settings01Icon },
