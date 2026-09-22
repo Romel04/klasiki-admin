@@ -9,6 +9,7 @@ import {
   PackageIcon,
   Folder01Icon,
   ClipboardIcon,
+  UserGroupIcon,
   Clock01Icon,
   Settings01Icon,
 } from "@hugeicons/core-free-icons";
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/products", label: "Products", icon: PackageIcon },
   { href: "/categories", label: "Categories", icon: Folder01Icon },
   { href: "/orders", label: "Orders", icon: ClipboardIcon },
+  { href: "/users", label: "Users", icon: UserGroupIcon },
   { href: "/activity-log", label: "Activity Log", icon: Clock01Icon },
   { href: "/settings", label: "Settings", icon: Settings01Icon },
 ];

@@ -1,5 +1,8 @@
 import type { Product } from "@/types/product";
 import type { Category } from "@/types/category";
+import type { District, Thana } from "@/types/location";
+import type { Order } from "@/types/order";
+import type { DashboardUser } from "@/types/user";
 
 export let MOCK_CATEGORIES: Category[] = [
   // Top-level: Bags
@@ -156,4 +159,76 @@ export let MOCK_PRODUCTS: Product[] = [
 
 export function setMockProducts(products: Product[]) {
   MOCK_PRODUCTS = products;
+}
+
+export const MOCK_DISTRICTS: District[] = [
+  { id: "dist-dhaka", name: "Dhaka", deliveryCharge: 70 },
+  { id: "dist-chattogram", name: "Chattogram", deliveryCharge: 120 },
+  { id: "dist-sylhet", name: "Sylhet", deliveryCharge: 130 },
+  { id: "dist-khulna", name: "Khulna", deliveryCharge: 130 },
+  { id: "dist-rajshahi", name: "Rajshahi", deliveryCharge: 130 },
+];
+
+export const MOCK_THANAS: Record<string, Thana[]> = {
+  "dist-dhaka": [
+    { id: "thana-dhanmondi", name: "Dhanmondi" },
+    { id: "thana-gulshan", name: "Gulshan" },
+    { id: "thana-mirpur", name: "Mirpur" },
+  ],
+  "dist-chattogram": [
+    { id: "thana-panchlaish", name: "Panchlaish" },
+    { id: "thana-kotwali", name: "Kotwali" },
+  ],
+};
+
+export let MOCK_ORDERS: Order[] = [
+  {
+    id: "ord-1",
+    customerName: "Nusrat Jahan",
+    customerPhone: "01711-000000",
+    shippingAddress: "House 12, Road 5, Dhanmondi",
+    districtId: "dist-dhaka",
+    districtName: "Dhaka",
+    source: "facebook",
+    status: "pending",
+    items: [
+      { id: "item-1", productId: "1", productName: "The Satchel", variantId: "v1", color: "Tan", quantity: 1, unitPrice: 4200, totalPrice: 4200 },
+    ],
+    total: 4200,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "ord-2",
+    customerName: "Tanvir Ahmed",
+    customerPhone: "01911-000000",
+    shippingAddress: "Flat 3B, GEC Circle",
+    districtId: "dist-chattogram",
+    districtName: "Chattogram",
+    source: "whatsapp",
+    status: "confirmed",
+    items: [
+      { id: "item-2", productId: "2", productName: "The Tote", variantId: "v4", color: "Olive", quantity: 2, unitPrice: 3600, totalPrice: 7200 },
+    ],
+    total: 7200,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export function setMockOrders(orders: Order[]) {
+  MOCK_ORDERS = orders;
+}
+
+export let MOCK_USERS: DashboardUser[] = [
+  {
+    id: "1",
+    name: "Akanto Chodu",
+    email: "chodu@gmail.com",
+    role: "admin",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export function setMockUsers(users: DashboardUser[]) {
+  MOCK_USERS = users;
 }
