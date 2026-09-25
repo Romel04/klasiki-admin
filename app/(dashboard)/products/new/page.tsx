@@ -16,12 +16,15 @@ export default function NewProductPage() {
         name: values.name,
         description: values.description,
         price: values.price,
+        discountPrice: values.discountPrice,
         categoryId: values.categoryId,
         isFeatured: values.isFeatured,
         variants: values.variants.map((v) => ({
           id: v.id ?? `new-${crypto.randomUUID()}`,
           color: v.color,
           stock: v.stock,
+          price: v.price,
+          discountPrice: v.discountPrice,
         })),
       },
       {

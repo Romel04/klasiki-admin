@@ -1,14 +1,13 @@
 "use client";
 
-import { use, useState, useRef } from "react";
+import { use, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
-  useOrder,
-  useUpdateOrderStatus,
-  useUpdateOrderAdminNote,
-} from "@/lib/hooks/use-orders";
-import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+  usePreorder,
+  useUpdatePreorderStatus,
+} from "@/lib/hooks/use-preorders";
+import { PreorderStatusBadge } from "@/components/preorders/preorder-status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -37,9 +36,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ORDER_STATUSES, type OrderStatus } from "@/types/order";
+import { PREORDER_STATUSES, type PreorderStatus } from "@/types/preorder";
 
-export default function OrderDetailPage({
+export default function PreorderDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -47,38 +46,24 @@ export default function OrderDetailPage({
   const { id } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: order, isPending, error } = useOrder(id);
-  const updateStatus = useUpdateOrderStatus();
-  const updateAdminNote = useUpdateOrderAdminNote();
+  const { data: preorder, isPending, error } = usePreorder(id);
+  const updateStatus = useUpdatePreorderStatus();
 
   const [cancelOpen, setCancelOpen] = useState(
     () => searchParams.get("cancel") === "1",
   );
   const [cancellationReason, setCancellationReason] = useState("");
-  // Uncontrolled on purpose — an effect that reset controlled state whenever
-  // `order.adminNote` loaded/changed would cause an extra render and trip the
-  // "no setState in effect" lint rule. `key={order.id}` below remounts the
-  // textarea (and resets its defaultValue) if you ever navigate between
-  // different orders' detail pages without a full page reload.
-  const adminNoteRef = useRef<HTMLTextAreaElement>(null);
-
-  function handleSaveAdminNote() {
-    const value = adminNoteRef.current?.value ?? "";
-    updateAdminNote.mutate(
-      { id, adminNote: value },
-      {
-        onSuccess: () => toast.success("Admin note saved."),
-        onError: () => toast.error("Failed to save admin note."),
-      },
-    );
-  }
 
   if (isPending)
-    return <p className="text-sm text-muted-foreground">Loading order...</p>;
-  if (error || !order)
-    return <p className="text-sm text-destructive">Failed to load order.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Loading pre-order...</p>
+    );
+  if (error || !preorder)
+    return (
+      <p className="text-sm text-destructive">Failed to load pre-order.</p>
+    );
 
-  function handleStatusChange(status: OrderStatus) {
+  function handleStatusChange(status: PreorderStatus) {
     if (status === "cancelled") {
       setCancelOpen(true);
       return;
@@ -86,8 +71,8 @@ export default function OrderDetailPage({
     updateStatus.mutate(
       { id, data: { status } },
       {
-        onSuccess: () => toast.success("Order status updated."),
-        onError: () => toast.error("Failed to update order status."),
+        onSuccess: () => toast.success("Pre-order status updated."),
+        onError: () => toast.error("Failed to update pre-order status."),
       },
     );
   }
@@ -98,67 +83,71 @@ export default function OrderDetailPage({
       { id, data: { status: "cancelled", cancellationReason } },
       {
         onSuccess: () => {
-          toast.success("Order cancelled.");
+          toast.success("Pre-order cancelled.");
           setCancelOpen(false);
-          router.replace(`/orders/${id}`);
+          router.replace(`/preorders/${id}`);
         },
-        onError: () => toast.error("Failed to cancel order."),
+        onError: () => toast.error("Failed to cancel pre-order."),
       },
     );
   }
 
-  const isLocked = order.status === "cancelled";
+  // Same as Orders: only "cancelled" locks the status control — a delivered
+  // pre-order can still be moved (e.g. a color swap after the fact).
+  const isLocked = preorder.status === "cancelled";
 
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Order #{order.id}</h1>
-        <OrderStatusBadge status={order.status} />
+        <h1 className="text-2xl font-semibold">Pre-order #{preorder.id}</h1>
+        <PreorderStatusBadge status={preorder.status} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 rounded-md border border-border p-4">
         <div>
           <div className="text-xs text-muted-foreground">Customer</div>
-          <div className="font-medium">{order.customerName}</div>
+          <div className="font-medium">{preorder.customerName}</div>
           <div className="text-sm text-muted-foreground">
-            {order.customerPhone}
+            {preorder.customerPhone}
           </div>
-          {order.customerEmail && (
+          {preorder.customerEmail && (
             <div className="text-sm text-muted-foreground">
-              {order.customerEmail}
+              {preorder.customerEmail}
             </div>
           )}
         </div>
         <div>
           <div className="text-xs text-muted-foreground">Source</div>
-          <div className="font-medium capitalize">{order.source}</div>
+          <div className="font-medium capitalize">{preorder.source}</div>
         </div>
         <div className="col-span-2">
           <div className="text-xs text-muted-foreground">Shipping Address</div>
-          <div className="font-medium">{order.shippingAddress}</div>
+          <div className="font-medium">{preorder.shippingAddress}</div>
           <div className="text-sm text-muted-foreground">
-            {[order.thanaName, order.districtName].filter(Boolean).join(", ")}
+            {[preorder.thanaName, preorder.districtName]
+              .filter(Boolean)
+              .join(", ")}
           </div>
         </div>
-        {order.billingAddress && (
+        {preorder.billingAddress && (
           <div className="col-span-2">
             <div className="text-xs text-muted-foreground">Billing Address</div>
-            <div className="font-medium">{order.billingAddress}</div>
+            <div className="font-medium">{preorder.billingAddress}</div>
           </div>
         )}
-        {order.specialNotes && (
+        {preorder.specialNotes && (
           <div className="col-span-2">
             <div className="text-xs text-muted-foreground">Notes</div>
-            <div className="text-sm">{order.specialNotes}</div>
+            <div className="text-sm">{preorder.specialNotes}</div>
           </div>
         )}
-        {order.status === "cancelled" && order.cancellationReason && (
+        {preorder.status === "cancelled" && preorder.cancellationReason && (
           <div className="col-span-2">
             <div className="text-xs text-muted-foreground">
               Cancellation Reason
             </div>
             <div className="text-sm text-destructive">
-              {order.cancellationReason}
+              {preorder.cancellationReason}
             </div>
           </div>
         )}
@@ -176,7 +165,7 @@ export default function OrderDetailPage({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {order.items.map((item) => (
+            {preorder.items.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>{item.productName}</TableCell>
                 <TableCell>{item.color}</TableCell>
@@ -189,7 +178,7 @@ export default function OrderDetailPage({
           </TableBody>
         </Table>
         <div className="flex items-center justify-end gap-2 pt-3 text-lg font-semibold">
-          Total: ৳{order.total.toLocaleString()}
+          Total: ৳{preorder.total.toLocaleString()}
         </div>
       </div>
 
@@ -197,84 +186,52 @@ export default function OrderDetailPage({
         <div className="space-y-1 max-w-xs">
           <Label>Update Status</Label>
           <Select
-            value={order.status}
-            onValueChange={(val) => handleStatusChange(val as OrderStatus)}
-            items={ORDER_STATUSES.map((s) => ({ value: s, label: s }))}
+            value={preorder.status}
+            onValueChange={(val) => handleStatusChange(val as PreorderStatus)}
+            items={PREORDER_STATUSES.map((s) => ({ value: s, label: s }))}
           >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ORDER_STATUSES.map((s) => (
+              {PREORDER_STATUSES.map((s) => (
                 <SelectItem key={s} value={s} className="capitalize">
                   {s}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {order.status === "delivered" && (
-            <p className="text-[11px] text-muted-foreground">
-              Already delivered — you can still change this (e.g. a color
-              exchange after delivery).
-            </p>
-          )}
         </div>
       )}
-
-      <div className="space-y-1 max-w-xl rounded-md border border-dashed border-border p-4">
-        <Label>Admin Note</Label>
-        <p className="text-[11px] text-muted-foreground">
-          Only visible here, to admins — never shown to the customer or on the
-          storefront. Use it for things like which shipment this order is from.
-        </p>
-        <Textarea
-          key={order.id}
-          ref={adminNoteRef}
-          placeholder="e.g. Fulfilled from the Sept 12 shipment..."
-          defaultValue={order.adminNote ?? ""}
-          rows={3}
-        />
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={updateAdminNote.isPending}
-            onClick={handleSaveAdminNote}
-          >
-            {updateAdminNote.isPending ? "Saving..." : "Save Note"}
-          </Button>
-        </div>
-      </div>
 
       <Button
         type="button"
         variant="outline"
-        onClick={() => router.push("/orders")}
+        onClick={() => router.push("/preorders")}
       >
-        Back to Orders
+        Back to Pre-orders
       </Button>
 
       <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this order?</AlertDialogTitle>
+            <AlertDialogTitle>Cancel this pre-order?</AlertDialogTitle>
             <AlertDialogDescription>
               A cancellation reason is required and will be visible on the
-              order.
+              pre-order.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-1 px-4">
             <Label>Reason</Label>
             <Textarea
-              placeholder="e.g. Customer requested cancellation, out of stock..."
+              placeholder="e.g. Customer changed their mind, item discontinued..."
               value={cancellationReason}
               onChange={(e) => setCancellationReason(e.target.value)}
             />
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={updateStatus.isPending}>
-              Keep Order
+              Keep Pre-order
             </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
@@ -282,7 +239,7 @@ export default function OrderDetailPage({
               disabled={updateStatus.isPending || !cancellationReason.trim()}
               onClick={handleConfirmCancel}
             >
-              {updateStatus.isPending ? "Cancelling..." : "Cancel Order"}
+              {updateStatus.isPending ? "Cancelling..." : "Cancel Pre-order"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

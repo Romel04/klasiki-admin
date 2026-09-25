@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Product } from "@/types/product";
 import {
-  orderFormSchema,
-  type OrderFormInput,
-  type OrderFormValues,
-} from "@/lib/validators/order";
-import { ORDER_SOURCES } from "@/types/order";
+  preorderFormSchema,
+  type PreorderFormInput,
+  type PreorderFormValues,
+} from "@/lib/validators/preorder";
+import { PREORDER_SOURCES } from "@/types/preorder";
 import { useDistricts, useThanas } from "@/lib/hooks/use-locations";
 import { useProducts, useProduct } from "@/lib/hooks/use-products";
 import { getVariantPrice, getVariantDisplayPrice } from "@/lib/api/products";
@@ -33,7 +33,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PlusSignIcon, Delete02Icon } from "@hugeicons/core-free-icons";
 
-const SOURCE_LABELS: Record<(typeof ORDER_SOURCES)[number], string> = {
+const SOURCE_LABELS: Record<(typeof PREORDER_SOURCES)[number], string> = {
   website: "Website",
   facebook: "Facebook",
   whatsapp: "WhatsApp",
@@ -41,12 +41,12 @@ const SOURCE_LABELS: Record<(typeof ORDER_SOURCES)[number], string> = {
   other: "Other",
 };
 
-interface OrderFormProps {
-  onSubmit: (values: OrderFormValues) => void;
+interface PreorderFormProps {
+  onSubmit: (values: PreorderFormValues) => void;
   isSubmitting?: boolean;
 }
 
-export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
+export function PreorderForm({ onSubmit, isSubmitting }: PreorderFormProps) {
   const router = useRouter();
   const { data: districts } = useDistricts();
   const { data: products } = useProducts();
@@ -58,8 +58,8 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<OrderFormInput, unknown, OrderFormValues>({
-    resolver: zodResolver(orderFormSchema),
+  } = useForm<PreorderFormInput, unknown, PreorderFormValues>({
+    resolver: zodResolver(preorderFormSchema),
     defaultValues: {
       customerName: "",
       customerPhone: "",
@@ -88,11 +88,6 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
     const product = products?.find((p) => p.id === item.productId);
     const qty = Number(item.quantity) || 0;
     if (!product) return sum;
-    // Prefer whatever unit price the selected color actually costs. The
-    // color list only comes from the per-product detail fetch (the /products
-    // list endpoint has no variant data), so pull it from the React Query
-    // cache if that row has already loaded it; otherwise fall back to the
-    // product's base price as an estimate.
     const detail = queryClient.getQueryData<Product>([
       "products",
       item.productId,
@@ -163,7 +158,6 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
             value={districtIdValue}
             onValueChange={(val) => {
               setValue("districtId", val ?? "", { shouldValidate: true });
-              // Thanas are scoped to a district — clear the stale choice.
               setValue("thanaId", "");
             }}
             items={
@@ -218,26 +212,26 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1">
-          <Label>Order Source</Label>
+          <Label>Source</Label>
           <Select
             value={sourceValue}
             onValueChange={(val) =>
               setValue(
                 "source",
-                (val ?? "website") as OrderFormValues["source"],
+                (val ?? "website") as PreorderFormValues["source"],
                 { shouldValidate: true },
               )
             }
-            items={ORDER_SOURCES.map((s) => ({
+            items={PREORDER_SOURCES.map((s) => ({
               value: s,
               label: SOURCE_LABELS[s],
             }))}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Where did this order come from?" />
+              <SelectValue placeholder="Where did this pre-order come from?" />
             </SelectTrigger>
             <SelectContent>
-              {ORDER_SOURCES.map((s) => (
+              {PREORDER_SOURCES.map((s) => (
                 <SelectItem key={s} value={s}>
                   {SOURCE_LABELS[s]}
                 </SelectItem>
@@ -245,8 +239,8 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
             </SelectContent>
           </Select>
           <p className="text-[11px] text-muted-foreground">
-            Not a real backend field — saved as a prefix on the order&apos;s
-            notes.
+            Not a real backend field yet — saved as a prefix on the
+            pre-order&apos;s notes, same as Orders.
           </p>
         </div>
       </div>
@@ -262,7 +256,7 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
       <div className="space-y-1">
         <Label>Notes (optional)</Label>
         <Textarea
-          placeholder="Anything else worth noting on this order..."
+          placeholder="Anything else worth noting on this pre-order..."
           {...register("specialNotes")}
         />
       </div>
@@ -270,7 +264,7 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
       <div className="space-y-3">
         <Label>Items</Label>
         {fields.map((field, index) => (
-          <OrderItemRow
+          <PreorderItemRow
             key={field.id}
             index={index}
             productId={itemsValue[index]?.productId}
@@ -311,12 +305,12 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
 
       <div className="flex gap-2 pt-2">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Creating..." : "Create Order"}
+          {isSubmitting ? "Creating..." : "Create Pre-order"}
         </Button>
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push("/orders")}
+          onClick={() => router.push("/preorders")}
         >
           Cancel
         </Button>
@@ -325,19 +319,19 @@ export function OrderForm({ onSubmit, isSubmitting }: OrderFormProps) {
   );
 }
 
-interface OrderItemRowProps {
+interface PreorderItemRowProps {
   index: number;
   productId: string | undefined;
   variantId: string | undefined;
   products: ReturnType<typeof useProducts>["data"];
-  register: UseFormRegister<OrderFormInput>;
-  setValue: UseFormSetValue<OrderFormInput>;
-  errors: FieldErrors<OrderFormInput>;
+  register: UseFormRegister<PreorderFormInput>;
+  setValue: UseFormSetValue<PreorderFormInput>;
+  errors: FieldErrors<PreorderFormInput>;
   onRemove: () => void;
   removeDisabled: boolean;
 }
 
-function OrderItemRow({
+function PreorderItemRow({
   index,
   productId,
   variantId,
@@ -347,10 +341,7 @@ function OrderItemRow({
   errors,
   onRemove,
   removeDisabled,
-}: OrderItemRowProps) {
-  // /products (list) doesn't return nested variant data — only /products/{id}
-  // (single) does. So the color dropdown for whichever product is selected in
-  // THIS row needs its own detail fetch, separate from the product-name list.
+}: PreorderItemRowProps) {
   const { data: selectedProduct, isFetching: isLoadingVariants } = useProduct(
     productId ?? "",
   );
@@ -364,8 +355,6 @@ function OrderItemRow({
             setValue(`items.${index}.productId`, val ?? "", {
               shouldValidate: true,
             });
-            // Reset the color choice whenever the product changes, since
-            // colors are specific to each product.
             setValue(`items.${index}.variantId`, "", { shouldValidate: true });
           }}
           items={products?.map((p) => ({ value: p.id, label: p.name })) ?? []}

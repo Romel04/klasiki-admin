@@ -84,6 +84,12 @@ interface ApiOrder {
   delivery_charge: string;
   total: string;
   special_notes?: string | null;
+  // NOT confirmed against Swagger — the Order entity/DTOs we've seen so far
+  // have no admin-only note field at all. This is a guessed column name for
+  // when the backend adds one; until then updateOrderAdminNote() below will
+  // 404/fail against the real API. Ask the backend dev to add an
+  // `admin_note` (text, nullable) column + a way to PATCH it.
+  admin_note?: string | null;
   cancellation_reason?: string | null;
   status: Order["status"];
   items: ApiOrderItem[];
@@ -108,6 +114,7 @@ function fromApiOrder(o: ApiOrder): Order {
     specialNotes: notes,
     status: o.status,
     cancellationReason: o.cancellation_reason ?? undefined,
+    adminNote: o.admin_note ?? undefined,
     items: (o.items ?? []).map((i) => {
       const color = i.variant_details?.color;
       return {
@@ -242,6 +249,37 @@ export async function updateOrderStatus(id: string, data: UpdateOrderStatusInput
       }),
     },
     "Failed to update order status",
+  );
+  return fromApiOrder(updated);
+}
+
+// NOT CONFIRMED against Swagger — there is currently no known backend field
+// or endpoint for a private admin-only note on an order (the only "note" the
+// backend has is the status-change note, which lands in statusHistory and
+// may be customer-visible via order tracking). This guesses a generic
+// PATCH /orders/{id} with an `admin_note` field. Until the backend adds a
+// real column + accepts this on the update endpoint, this call will fail
+// against the live API — flag to your backend friend and adjust the path/
+// field name here once confirmed.
+export async function updateOrderAdminNote(id: string, adminNote: string): Promise<Order> {
+  if (USE_MOCKS) {
+    const index = MOCK_ORDERS.findIndex((o) => o.id === id);
+    if (index === -1) throw new Error("Order not found");
+    const updated = { ...MOCK_ORDERS[index], adminNote };
+    const next = [...MOCK_ORDERS];
+    next[index] = updated;
+    setMockOrders(next);
+    return updated;
+  }
+
+  const updated = await apiJson<ApiOrder>(
+    `/orders/${id}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ admin_note: adminNote }),
+    },
+    "Failed to save admin note",
   );
   return fromApiOrder(updated);
 }

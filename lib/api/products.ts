@@ -18,8 +18,8 @@ interface ApiVariant {
   product_id: number;
   name: string;
   attributes: Record<string, string> | null;
-  price: number | null;
-  discount_price: number | null;
+  price: number | string | null;
+  discount_price: number | string | null;
   stock_qty: number;
   is_active: boolean;
 }
@@ -29,6 +29,7 @@ interface ApiProduct {
   name: string;
   description: string;
   price: string;
+  discount_price?: number | string | null;
   category_id: string;
   category?: { id: number; name: string };
   is_featured: boolean;
@@ -43,15 +44,48 @@ interface ApiProduct {
 }
 
 function fromApiVariant(v: ApiVariant): ProductVariant {
+  const priceNum =
+    v.price != null && v.price !== "" ? Number(v.price) : undefined;
+  const discountNum =
+    v.discount_price != null && v.discount_price !== ""
+      ? Number(v.discount_price)
+      : undefined;
+
   return {
     id: String(v.id),
     color: v.attributes?.color ?? v.name,
     stock: v.stock_qty,
+    price: priceNum !== undefined && priceNum > 0 ? priceNum : undefined,
+    discountPrice:
+      discountNum !== undefined && discountNum > 0 ? discountNum : undefined,
   };
+}
+
+// Resolve what a color actually costs: its own override if set, otherwise
+// the product's base price. Use these anywhere a variant's price needs to be
+// displayed (order form color picker, product detail, etc.) instead of
+// reading product.price or variant.price directly.
+export function getVariantPrice(basePrice: number, variant?: ProductVariant): number {
+  return variant?.price ?? basePrice;
+}
+
+export function getVariantDisplayPrice(
+  basePrice: number,
+  variant?: ProductVariant,
+  baseDiscountPrice?: number,
+): number {
+  if (variant?.discountPrice != null) return variant.discountPrice;
+  if (variant?.price != null) return variant.price;
+  return baseDiscountPrice ?? basePrice;
 }
 
 function fromApiProduct(p: ApiProduct, variantsOverride?: ApiVariant[]): Product {
   const rawVariants = variantsOverride ?? p.productVariants ?? p.variants ?? p.product_variants ?? [];
+  const discountNum =
+    p.discount_price != null && p.discount_price !== ""
+      ? Number(p.discount_price)
+      : undefined;
+
   return {
     id: String(p.id),
     name: p.name,
@@ -59,6 +93,8 @@ function fromApiProduct(p: ApiProduct, variantsOverride?: ApiVariant[]): Product
     // Confirmed live: the backend returns price as a string ("1500.00"), not
     // a number, despite the DTO — coerce defensively so math/formatting works.
     price: Number(p.price),
+    discountPrice:
+      discountNum !== undefined && discountNum > 0 ? discountNum : undefined,
     categoryId: String(p.category_id),
     categoryName: p.category?.name ?? "Uncategorized",
     isFeatured: p.is_featured,
@@ -78,6 +114,9 @@ function toProductPayload(data: Partial<CreateProductInput>) {
   if (data.name !== undefined) payload.name = data.name;
   if (data.description !== undefined) payload.description = data.description;
   if (data.price !== undefined) payload.price = data.price;
+  if ("discountPrice" in data) {
+    payload.discount_price = data.discountPrice ?? null;
+  }
   if (data.categoryId !== undefined) payload.category_id = Number(data.categoryId);
   if (data.isFeatured !== undefined) payload.is_featured = data.isFeatured;
   // The base product also carries its own top-level stock_qty per the DTO.
@@ -90,15 +129,28 @@ function toProductPayload(data: Partial<CreateProductInput>) {
   return payload;
 }
 
-function toVariantPayload(v: { color: string; stock: number }) {
+interface VariantFormFields {
+  id?: string;
+  color: string;
+  stock: number;
+  price?: number;
+  discountPrice?: number;
+}
+
+function toVariantPayload(v: VariantFormFields) {
   return {
     name: v.color,
     attributes: { color: v.color },
     stock_qty: v.stock,
+    // Explicitly send null (not just omit) when a color has no override, so
+    // clearing a previously-set price/discount actually clears it server-side
+    // instead of leaving the old value in place on a PATCH.
+    price: v.price ?? null,
+    discount_price: v.discountPrice ?? null,
   };
 }
 
-async function createProductVariant(productId: string, v: { color: string; stock: number }): Promise<ApiVariant> {
+async function createProductVariant(productId: string, v: VariantFormFields): Promise<ApiVariant> {
   return apiJson<ApiVariant>(
     `/products/${productId}/variants`,
     {
@@ -114,7 +166,7 @@ async function createProductVariant(productId: string, v: { color: string; stock
 async function updateProductVariant(
   productId: string,
   variantId: string,
-  v: { color: string; stock: number },
+  v: VariantFormFields,
 ): Promise<ApiVariant> {
   return apiJson<ApiVariant>(
     `/products/${productId}/variants/${variantId}`,

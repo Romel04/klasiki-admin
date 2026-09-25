@@ -86,8 +86,7 @@ export default function OrdersPage() {
               <TableCell className="capitalize">{order.source}</TableCell>
               <TableCell>৳{order.total.toLocaleString()}</TableCell>
               <TableCell>
-                {order.status === "cancelled" ||
-                order.status === "delivered" ? (
+                {order.status === "cancelled" ? (
                   <OrderStatusBadge status={order.status} />
                 ) : (
                   <Select
@@ -95,6 +94,7 @@ export default function OrdersPage() {
                     onValueChange={(val) =>
                       handleStatusChange(order.id, val as OrderStatus)
                     }
+                    items={ORDER_STATUSES.map((s) => ({ value: s, label: s }))}
                   >
                     <SelectTrigger className="h-7 w-[130px] text-xs">
                       <SelectValue />

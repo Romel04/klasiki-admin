@@ -32,12 +32,15 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           name: values.name,
           description: values.description,
           price: values.price,
+          discountPrice: values.discountPrice,
           categoryId: values.categoryId,
           isFeatured: values.isFeatured,
           variants: values.variants.map((v) => ({
             id: v.id ?? `new-${crypto.randomUUID()}`,
             color: v.color,
             stock: v.stock,
+            price: v.price,
+            discountPrice: v.discountPrice,
           })),
           removedVariantIds,
         },
@@ -73,12 +76,15 @@ export default function EditProductPage({ params }: EditProductPageProps) {
           name: product.name,
           description: product.description,
           price: product.price,
+          discountPrice: product.discountPrice,
           categoryId: product.categoryId,
           isFeatured: product.isFeatured,
           variants: product.variants.map((v) => ({
             id: v.id,
             color: v.color,
             stock: v.stock,
+            price: v.price,
+            discountPrice: v.discountPrice,
           })),
         }}
         onSubmit={handleSubmit}

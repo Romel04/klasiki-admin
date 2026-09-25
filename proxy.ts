@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED_PATHS = ["/dashboard", "/products", "/categories", "/orders", "/districts", "/users", "/activity-log", "/settings"];
+const PROTECTED_PATHS = ["/dashboard", "/products", "/categories", "/orders", "/preorders", "/districts", "/users", "/activity-log", "/settings"];
 const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
 
 export function proxy(request: NextRequest) {
@@ -20,5 +20,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/products/:path*", "/categories/:path*", "/orders/:path*", "/districts/:path*", "/users/:path*", "/activity-log/:path*", "/settings/:path*"],
+  matcher: ["/dashboard/:path*", "/products/:path*", "/categories/:path*", "/orders/:path*", "/preorders/:path*", "/districts/:path*", "/users/:path*", "/activity-log/:path*", "/settings/:path*"],
 };

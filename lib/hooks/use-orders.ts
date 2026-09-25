@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getOrders, getOrder, createOrder, updateOrderStatus } from "@/lib/api/orders";
+import { getOrders, getOrder, createOrder, updateOrderStatus, updateOrderAdminNote } from "@/lib/api/orders";
 import type { UpdateOrderStatusInput } from "@/types/order";
 
 export function useOrders() {
@@ -28,6 +28,17 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateOrderStatusInput }) => updateOrderStatus(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["orders", id] });
+    },
+  });
+}
+
+export function useUpdateOrderAdminNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, adminNote }: { id: string; adminNote: string }) => updateOrderAdminNote(id, adminNote),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["orders", id] });

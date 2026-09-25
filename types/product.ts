@@ -4,6 +4,12 @@ export interface ProductVariant {
   colorHex?: string;
   stock: number;
   imageUrl?: string;
+  // Optional per-variant overrides. When undefined, the variant uses the
+  // product's base `price` (see getVariantPrice/getVariantDisplayPrice in
+  // lib/api/products.ts) — only colors that actually cost differently need
+  // to set these.
+  price?: number;
+  discountPrice?: number;
 }
 
 export interface Product {
@@ -11,6 +17,7 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  discountPrice?: number;
   categoryId: string;
   categoryName: string;
   isFeatured: boolean;

@@ -2,6 +2,7 @@ import type { Product } from "@/types/product";
 import type { Category } from "@/types/category";
 import type { District, Thana } from "@/types/location";
 import type { Order } from "@/types/order";
+import type { Preorder } from "@/types/preorder";
 import type { DashboardUser } from "@/types/user";
 
 export let MOCK_CATEGORIES: Category[] = [
@@ -216,6 +217,29 @@ export let MOCK_ORDERS: Order[] = [
 
 export function setMockOrders(orders: Order[]) {
   MOCK_ORDERS = orders;
+}
+
+export let MOCK_PREORDERS: Preorder[] = [
+  {
+    id: "pre-1",
+    customerName: "Farhana Akter",
+    customerPhone: "01611-000000",
+    shippingAddress: "House 22, Road 9, Mirpur",
+    districtId: "dist-dhaka",
+    districtName: "Dhaka",
+    source: "website",
+    status: "pending",
+    specialNotes: "Wants it before Eid — restock expected next month.",
+    items: [
+      { id: "pre-item-1", productId: "1", productName: "The Satchel", variantId: "v2", color: "Black", quantity: 1, unitPrice: 4200, totalPrice: 4200 },
+    ],
+    total: 4200,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export function setMockPreorders(preorders: Preorder[]) {
+  MOCK_PREORDERS = preorders;
 }
 
 export let MOCK_USERS: DashboardUser[] = [

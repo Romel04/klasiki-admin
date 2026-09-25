@@ -103,9 +103,18 @@ export function ProductForm({
       name: "",
       description: "",
       price: "" as unknown as number,
+      discountPrice: "" as unknown as number | undefined,
       categoryId: "",
       isFeatured: false,
-      variants: [{ id: `new-${crypto.randomUUID()}`, color: "", stock: "" as unknown as number }],
+      variants: [
+        {
+          id: `new-${crypto.randomUUID()}`,
+          color: "",
+          stock: "" as unknown as number,
+          price: "" as unknown as number | undefined,
+          discountPrice: "" as unknown as number | undefined,
+        },
+      ],
       ...defaultValues,
     },
   });
@@ -202,8 +211,17 @@ export function ProductForm({
     e.preventDefault();
   };
 
-  const { onChange: onPriceChange, onBlur: onPriceBlur, ...priceRegister } =
-    register("price");
+  const {
+    onChange: onPriceChange,
+    onBlur: onPriceBlur,
+    ...priceRegister
+  } = register("price");
+
+  const {
+    onChange: onDiscountPriceChange,
+    onBlur: onDiscountPriceBlur,
+    ...discountPriceRegister
+  } = register("discountPrice");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
@@ -253,65 +271,106 @@ export function ProductForm({
         </div>
 
         <div className="space-y-1">
-          <Label>Category</Label>
-          <Select
-            value={watch("categoryId")}
-            onValueChange={(value) => setValue("categoryId", value ?? "")}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue
-                placeholder={
-                  isCategoriesLoading
-                    ? "Loading categories..."
-                    : "Select a category"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent className="max-h-80">
-              {isCategoriesLoading ? (
-                <div className="p-3 text-sm text-muted-foreground">
-                  Loading categories...
-                </div>
-              ) : topLevelCategories.length === 0 ? (
-                <div className="p-3 text-sm text-muted-foreground">
-                  No categories found
-                </div>
-              ) : (
-                topLevelCategories.map((parent, idx) => {
-                  const children = subcategories.filter(
-                    (c) => c.parentId === parent.id,
-                  );
-                  return (
-                    <SelectGroup key={parent.id}>
-                      {idx > 0 && <SelectSeparator />}
-                      <SelectLabel>
-                        {parent.name}
-                      </SelectLabel>
-                      <SelectItem value={parent.id} className="font-medium">
-                        {parent.name} (General)
-                      </SelectItem>
-                      {children.map((child) => (
-                        <SelectItem
-                          key={child.id}
-                          value={child.id}
-                          className="pl-6 text-foreground/90"
-                        >
-                          <span className="text-muted-foreground/60 mr-1.5 select-none">↳</span>
-                          <span>{child.name}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  );
-                })
-              )}
-            </SelectContent>
-          </Select>
-          {errors.categoryId && (
+          <Label>
+            Discounted Price (৳){" "}
+            <span className="text-xs text-muted-foreground font-normal">
+              (Optional)
+            </span>
+          </Label>
+          <Input
+            type="number"
+            step="any"
+            min="0"
+            placeholder="No discount"
+            {...discountPriceRegister}
+            onChange={(e) => {
+              const clean = sanitizePrice(e.target.value);
+              e.target.value = clean;
+              onDiscountPriceChange(e);
+            }}
+            onBlur={(e) => {
+              if (e.target.value.endsWith(".")) {
+                e.target.value = e.target.value.slice(0, -1);
+              }
+              onDiscountPriceBlur(e);
+            }}
+            onKeyDown={handlePriceKeyDown}
+          />
+          {errors.discountPrice && (
             <p className="text-xs text-destructive">
-              {errors.categoryId.message}
+              {errors.discountPrice.message}
             </p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-1">
+        <Label>Category</Label>
+        <Select
+          value={watch("categoryId")}
+          onValueChange={(value) => setValue("categoryId", value ?? "")}
+          items={topLevelCategories.map((parent) => ({
+            items: [
+              { value: parent.id, label: `${parent.name} (General)` },
+              ...subcategories
+                .filter((c) => c.parentId === parent.id)
+                .map((child) => ({ value: child.id, label: child.name })),
+            ],
+          }))}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue
+              placeholder={
+                isCategoriesLoading
+                  ? "Loading categories..."
+                  : "Select a category"
+              }
+            />
+          </SelectTrigger>
+          <SelectContent className="max-h-80">
+            {isCategoriesLoading ? (
+              <div className="p-3 text-sm text-muted-foreground">
+                Loading categories...
+              </div>
+            ) : topLevelCategories.length === 0 ? (
+              <div className="p-3 text-sm text-muted-foreground">
+                No categories found
+              </div>
+            ) : (
+              topLevelCategories.map((parent, idx) => {
+                const children = subcategories.filter(
+                  (c) => c.parentId === parent.id,
+                );
+                return (
+                  <SelectGroup key={parent.id}>
+                    {idx > 0 && <SelectSeparator />}
+                    <SelectLabel>{parent.name}</SelectLabel>
+                    <SelectItem value={parent.id} className="font-medium">
+                      {parent.name} (General)
+                    </SelectItem>
+                    {children.map((child) => (
+                      <SelectItem
+                        key={child.id}
+                        value={child.id}
+                        className="pl-6 text-foreground/90"
+                      >
+                        <span className="text-muted-foreground/60 mr-1.5 select-none">
+                          ↳
+                        </span>
+                        <span>{child.name}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                );
+              })
+            )}
+          </SelectContent>
+        </Select>
+        {errors.categoryId && (
+          <p className="text-xs text-destructive">
+            {errors.categoryId.message}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
@@ -334,6 +393,8 @@ export function ProductForm({
                 id: `new-${crypto.randomUUID()}`,
                 color: "",
                 stock: "" as unknown as number,
+                price: "" as unknown as number | undefined,
+                discountPrice: "" as unknown as number | undefined,
               })
             }
           >
@@ -342,25 +403,55 @@ export function ProductForm({
           </Button>
         </div>
 
+        <p className="text-[11px] text-muted-foreground">
+          Leave Price / Discounted Price blank to use the product&apos;s base
+          price above — only fill them in for a color that costs differently.
+        </p>
+
+        <div className="grid grid-cols-[1.3fr_0.8fr_0.9fr_0.9fr_auto] gap-2 px-0.5">
+          <span className="text-[11px] text-muted-foreground">Color</span>
+          <span className="text-[11px] text-muted-foreground">Stock</span>
+          <span className="text-[11px] text-muted-foreground">Price (৳)</span>
+          <span className="text-[11px] text-muted-foreground">
+            Discounted (৳)
+          </span>
+          <span />
+        </div>
+
         {fields.map((field, index) => {
-          const { onChange: onStockChange, ...stockRegister } =
-            register(`variants.${index}.stock`);
+          const { onChange: onStockChange, ...stockRegister } = register(
+            `variants.${index}.stock`,
+          );
+          const { onChange: onVariantPriceChange, ...variantPriceRegister } =
+            register(`variants.${index}.price`);
+          const {
+            onChange: onVariantDiscountChange,
+            ...variantDiscountRegister
+          } = register(`variants.${index}.discountPrice`);
 
           return (
-            <div key={field.id} className="flex items-center gap-2">
+            <div
+              key={field.id}
+              className="grid grid-cols-[1.3fr_0.8fr_0.9fr_0.9fr_auto] items-start gap-2"
+            >
               <input type="hidden" {...register(`variants.${index}.id`)} />
-              <div className="flex-1">
+              <div>
                 <Input
                   placeholder="e.g. Tan"
                   {...register(`variants.${index}.color`)}
                 />
+                {errors.variants?.[index]?.color && (
+                  <p className="text-xs text-destructive mt-1">
+                    {errors.variants[index]?.color?.message}
+                  </p>
+                )}
               </div>
-              <div className="w-28">
+              <div>
                 <Input
                   type="number"
                   min="0"
                   step="1"
-                  placeholder="0"
+                  placeholder="Stock"
                   {...stockRegister}
                   onChange={(e) => {
                     const clean = sanitizeStock(e.target.value);
@@ -369,6 +460,39 @@ export function ProductForm({
                   }}
                   onKeyDown={handleStockKeyDown}
                 />
+              </div>
+              <div>
+                <Input
+                  type="number"
+                  step="any"
+                  min="0"
+                  placeholder="Base price"
+                  {...variantPriceRegister}
+                  onChange={(e) => {
+                    e.target.value = sanitizePrice(e.target.value);
+                    onVariantPriceChange(e);
+                  }}
+                  onKeyDown={handlePriceKeyDown}
+                />
+              </div>
+              <div>
+                <Input
+                  type="number"
+                  step="any"
+                  min="0"
+                  placeholder="No discount"
+                  {...variantDiscountRegister}
+                  onChange={(e) => {
+                    e.target.value = sanitizePrice(e.target.value);
+                    onVariantDiscountChange(e);
+                  }}
+                  onKeyDown={handlePriceKeyDown}
+                />
+                {errors.variants?.[index]?.discountPrice && (
+                  <p className="text-xs text-destructive mt-1">
+                    {errors.variants[index]?.discountPrice?.message}
+                  </p>
+                )}
               </div>
               <Button
                 type="button"
@@ -386,7 +510,7 @@ export function ProductForm({
             </div>
           );
         })}
-        {errors.variants && (
+        {errors.variants && !Array.isArray(errors.variants) && (
           <p className="text-xs text-destructive">{errors.variants.message}</p>
         )}
       </div>

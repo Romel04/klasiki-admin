@@ -78,6 +78,13 @@ export function CategoryForm({
               shouldValidate: true,
             });
           }}
+          items={[
+            { value: "none", label: "None (Top-level Category)" },
+            ...eligibleParents.map((parent) => ({
+              value: parent.id,
+              label: parent.name,
+            })),
+          ]}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select parent category" />

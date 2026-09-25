@@ -48,6 +48,11 @@ export interface Order {
   specialNotes?: string;
   status: OrderStatus;
   cancellationReason?: string;
+  // Internal-only note for admins (e.g. "this order is from the Sept 12
+  // shipment"). Never shown to the customer or on the storefront — only on
+  // this order's detail page. NOT a confirmed backend field yet — see the
+  // note above updateOrderAdminNote in lib/api/orders.ts.
+  adminNote?: string;
   items: OrderItem[];
   total: number;
   createdAt: string;

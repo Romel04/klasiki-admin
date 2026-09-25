@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Search01Icon,
   Notification01Icon,
   User03Icon,
   Logout03Icon,
@@ -12,6 +11,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { clearAuth } from "@/lib/auth/token-store";
 import { useSidebar } from "./sidebar-context";
+import { GlobalSearch } from "./global-search";
 
 export function Topbar() {
   const router = useRouter();
@@ -40,7 +40,7 @@ export function Topbar() {
 
   return (
     <header className="h-14 border-b border-border flex items-center justify-between px-4 md:px-6 bg-card">
-      {/* Left side: hamburger + search hint */}
+      {/* Left side: hamburger + global search */}
       <div className="flex items-center gap-3">
         <button
           id="topbar-sidebar-toggle"
@@ -51,10 +51,7 @@ export function Topbar() {
           <HugeiconsIcon icon={Menu01Icon} size={20} strokeWidth={1.5} />
         </button>
 
-        <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-          <HugeiconsIcon icon={Search01Icon} size={16} strokeWidth={1.5} />
-          <span>Search products, orders...</span>
-        </div>
+        <GlobalSearch />
       </div>
 
       {/* Right side: notifications + user */}

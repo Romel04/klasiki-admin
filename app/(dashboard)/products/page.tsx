@@ -74,7 +74,20 @@ export default function ProductsPage() {
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.categoryName}</TableCell>
-                  <TableCell>৳{product.price.toLocaleString()}</TableCell>
+                  <TableCell>
+                    {product.discountPrice ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-foreground">
+                          ৳{product.discountPrice.toLocaleString()}
+                        </span>
+                        <span className="text-xs text-muted-foreground line-through">
+                          ৳{product.price.toLocaleString()}
+                        </span>
+                      </div>
+                    ) : (
+                      `৳${product.price.toLocaleString()}`
+                    )}
+                  </TableCell>
                   <TableCell>
                     {totalStock === 0 ? (
                       <Badge variant="destructive">Out of stock</Badge>
