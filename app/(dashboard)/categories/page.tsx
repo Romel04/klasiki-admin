@@ -7,6 +7,7 @@ import { useCategories, useDeleteCategory } from "@/lib/hooks/use-categories";
 import { useProducts } from "@/lib/hooks/use-products";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -46,7 +47,19 @@ export default function CategoriesPage() {
 
   if (isPending)
     return (
-      <p className="text-sm text-muted-foreground">Loading categories...</p>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="h-6 w-28 rounded-md bg-muted/70 animate-pulse" />
+            <div className="h-3.5 w-64 rounded-full bg-muted/70 animate-pulse" />
+          </div>
+          <div className="h-8 w-32 rounded-md bg-muted/70 animate-pulse" />
+        </div>
+        <TableSkeleton
+          columns={["w-36", "w-24", "w-16", "w-48", "w-20"]}
+          rows={8}
+        />
+      </div>
     );
   if (error)
     return (

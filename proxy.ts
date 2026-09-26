@@ -7,12 +7,12 @@ const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
 export function proxy(request: NextRequest) {
   if (SKIP_AUTH) return NextResponse.next();
 
-  // We can only check for the refresh token cookie here (edge runtime can't
-  // see the in-memory access token) — its presence is enough to gate the route.
+  // Check for either the refresh token or access token cookie.
   const refreshToken = request.cookies.get("klasiki_refresh_token");
+  const accessToken = request.cookies.get("klasiki_access_token");
   const isProtected = PROTECTED_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
 
-  if (isProtected && !refreshToken) {
+  if (isProtected && !refreshToken && !accessToken) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

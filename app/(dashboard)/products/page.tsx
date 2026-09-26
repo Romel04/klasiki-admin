@@ -7,6 +7,7 @@ import { useProducts, useDeleteProduct } from "@/lib/hooks/use-products";
 import type { Product } from "@/types/product";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -39,7 +40,18 @@ export default function ProductsPage() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   if (isPending)
-    return <p className="text-sm text-muted-foreground">Loading products...</p>;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="h-6 w-24 rounded-md bg-muted/70 animate-pulse" />
+          <div className="h-8 w-28 rounded-md bg-muted/70 animate-pulse" />
+        </div>
+        <TableSkeleton
+          columns={["w-40", "w-28", "w-20", "w-16", "w-16", "w-16"]}
+          rows={7}
+        />
+      </div>
+    );
   if (error)
     return <p className="text-sm text-destructive">Failed to load products.</p>;
 

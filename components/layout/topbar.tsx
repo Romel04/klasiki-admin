@@ -50,9 +50,8 @@ export function Topbar() {
         >
           <HugeiconsIcon icon={Menu01Icon} size={20} strokeWidth={1.5} />
         </button>
-
-        <GlobalSearch />
       </div>
+      <GlobalSearch />
 
       {/* Right side: notifications + user */}
       <div className="flex items-center gap-4">

@@ -7,6 +7,7 @@ import { useUsers, useUpdateUser, useDeleteUser } from "@/lib/hooks/use-users";
 import { USER_ROLES, type UserRole } from "@/types/user";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -45,7 +46,18 @@ export default function UsersPage() {
   } | null>(null);
 
   if (isPending)
-    return <p className="text-sm text-muted-foreground">Loading users...</p>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="h-7 w-16 rounded-md bg-muted/70 animate-pulse" />
+          <div className="h-9 w-24 rounded-md bg-muted/70 animate-pulse" />
+        </div>
+        <TableSkeleton
+          columns={["w-32", "w-44", "w-24", "w-12", "w-12"]}
+          rows={5}
+        />
+      </div>
+    );
   if (error)
     return <p className="text-sm text-destructive">Failed to load users.</p>;
 
@@ -86,72 +98,74 @@ export default function UsersPage() {
         </Link>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Active</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users?.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.name}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {user.email}
-              </TableCell>
-              <TableCell>
-                <Select
-                  value={user.role}
-                  onValueChange={(val) =>
-                    handleRoleChange(user.id, val as UserRole)
-                  }
-                >
-                  <SelectTrigger className="h-8 w-[110px] text-xs capitalize">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {USER_ROLES.map((r) => (
-                      <SelectItem
-                        key={r}
-                        value={r}
-                        className="text-xs capitalize"
-                      >
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                <Switch
-                  checked={user.isActive}
-                  onCheckedChange={(checked) =>
-                    handleActiveToggle(user.id, checked)
-                  }
-                />
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    setDeleteTarget({ id: user.id, name: user.name })
-                  }
-                >
-                  <HugeiconsIcon
-                    icon={Delete02Icon}
-                    className="size-4 text-destructive"
-                  />
-                </Button>
-              </TableCell>
+      <div className="bg-card border border-border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Active</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {users?.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">{user.name}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {user.email}
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={user.role}
+                    onValueChange={(val) =>
+                      handleRoleChange(user.id, val as UserRole)
+                    }
+                  >
+                    <SelectTrigger className="h-8 w-[110px] text-xs capitalize">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {USER_ROLES.map((r) => (
+                        <SelectItem
+                          key={r}
+                          value={r}
+                          className="text-xs capitalize"
+                        >
+                          {r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Switch
+                    checked={user.isActive}
+                    onCheckedChange={(checked) =>
+                      handleActiveToggle(user.id, checked)
+                    }
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      setDeleteTarget({ id: user.id, name: user.name })
+                    }
+                  >
+                    <HugeiconsIcon
+                      icon={Delete02Icon}
+                      className="size-4 text-destructive"
+                    />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <AlertDialog
         open={!!deleteTarget}

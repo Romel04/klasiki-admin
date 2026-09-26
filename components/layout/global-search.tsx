@@ -15,6 +15,8 @@ import {
   ArrowRight01Icon,
   PlusSignIcon,
   DashboardSquare01Icon,
+  Clock01Icon,
+  Settings01Icon,
 } from "@hugeicons/core-free-icons";
 import { useProducts } from "@/lib/hooks/use-products";
 import { useOrders } from "@/lib/hooks/use-orders";
@@ -25,7 +27,13 @@ import { Badge } from "@/components/ui/badge";
 
 interface SearchResultItem {
   id: string;
-  category: "navigation" | "products" | "orders" | "categories" | "preorders" | "users";
+  category:
+    | "navigation"
+    | "products"
+    | "orders"
+    | "categories"
+    | "preorders"
+    | "users";
   groupTitle: string;
   title: string;
   subtitle: string;
@@ -180,17 +188,19 @@ export function GlobalSearch() {
         },
       ];
 
-      const recentProducts: SearchResultItem[] = products.slice(0, 4).map((p) => ({
-        id: `recent-prod-${p.id}`,
-        category: "products",
-        groupTitle: "Recent Products",
-        title: p.name,
-        subtitle: `${p.categoryName} • ৳${(p.discountPrice ?? p.price).toLocaleString()} • ${p.stockQty} in stock`,
-        badge: p.stockQty === 0 ? "Out of stock" : `${p.stockQty} in stock`,
-        badgeVariant: p.stockQty === 0 ? "destructive" : "outline",
-        href: `/products/${p.id}/edit`,
-        icon: PackageIcon,
-      }));
+      const recentProducts: SearchResultItem[] = products
+        .slice(0, 4)
+        .map((p) => ({
+          id: `recent-prod-${p.id}`,
+          category: "products",
+          groupTitle: "Recent Products",
+          title: p.name,
+          subtitle: `${p.categoryName} • ৳${(p.discountPrice ?? p.price).toLocaleString()} • ${p.stockQty} in stock`,
+          badge: p.stockQty === 0 ? "Out of stock" : `${p.stockQty} in stock`,
+          badgeVariant: p.stockQty === 0 ? "destructive" : "outline",
+          href: `/products/${p.id}/edit`,
+          icon: PackageIcon,
+        }));
 
       return [...quickNav, ...recentProducts];
     }
@@ -199,20 +209,86 @@ export function GlobalSearch() {
 
     // 1. Check quick navigation matches
     const navigationLinks = [
-      { name: "Dashboard", href: "/dashboard", desc: "Overview, charts, and metrics", icon: DashboardSquare01Icon },
-      { name: "All Products", href: "/products", desc: "Manage catalog, stock & pricing", icon: PackageIcon },
-      { name: "Add Product", href: "/products/new", desc: "Create a new product with variants", icon: PlusSignIcon },
-      { name: "All Categories", href: "/categories", desc: "Organize products by category", icon: Folder01Icon },
-      { name: "New Category", href: "/categories/new", desc: "Add a category or subcategory", icon: PlusSignIcon },
-      { name: "All Orders", href: "/orders", desc: "Customer orders, statuses, and tracking", icon: ClipboardIcon },
-      { name: "New Order", href: "/orders/new", desc: "Place or record a new customer order", icon: PlusSignIcon },
-      { name: "Pre-orders", href: "/preorders", desc: "Backordered and advance purchases", icon: ShoppingCartAdd01Icon },
-      { name: "New Pre-order", href: "/preorders/new", desc: "Create a preorder for upcoming stock", icon: PlusSignIcon },
-      { name: "Users & Admins", href: "/users", desc: "Manage team members and roles", icon: UserGroupIcon },
+      {
+        name: "Dashboard",
+        href: "/dashboard",
+        desc: "Overview, charts, and metrics",
+        icon: DashboardSquare01Icon,
+      },
+      {
+        name: "All Products",
+        href: "/products",
+        desc: "Manage catalog, stock & pricing",
+        icon: PackageIcon,
+      },
+      {
+        name: "Add Product",
+        href: "/products/new",
+        desc: "Create a new product with variants",
+        icon: PlusSignIcon,
+      },
+      {
+        name: "All Categories",
+        href: "/categories",
+        desc: "Organize products by category",
+        icon: Folder01Icon,
+      },
+      {
+        name: "New Category",
+        href: "/categories/new",
+        desc: "Add a category or subcategory",
+        icon: PlusSignIcon,
+      },
+      {
+        name: "All Orders",
+        href: "/orders",
+        desc: "Customer orders, statuses, and tracking",
+        icon: ClipboardIcon,
+      },
+      {
+        name: "New Order",
+        href: "/orders/new",
+        desc: "Place or record a new customer order",
+        icon: PlusSignIcon,
+      },
+      {
+        name: "Pre-orders",
+        href: "/preorders",
+        desc: "Backordered and advance purchases",
+        icon: ShoppingCartAdd01Icon,
+      },
+      {
+        name: "New Pre-order",
+        href: "/preorders/new",
+        desc: "Create a preorder for upcoming stock",
+        icon: PlusSignIcon,
+      },
+      {
+        name: "Users & Admins",
+        href: "/users",
+        desc: "Manage team members and roles",
+        icon: UserGroupIcon,
+      },
+      {
+        name: "Activity Log",
+        href: "/activity-log",
+        desc: "Recent actions taken by admins (demo)",
+        icon: Clock01Icon,
+      },
+      {
+        name: "Settings",
+        href: "/settings",
+        desc: "Account info and sign out",
+        icon: Settings01Icon,
+      },
     ];
 
     navigationLinks
-      .filter((nav) => nav.name.toLowerCase().includes(q) || nav.desc.toLowerCase().includes(q))
+      .filter(
+        (nav) =>
+          nav.name.toLowerCase().includes(q) ||
+          nav.desc.toLowerCase().includes(q),
+      )
       .forEach((nav) => {
         items.push({
           id: `nav-${nav.href}`,
@@ -230,7 +306,9 @@ export function GlobalSearch() {
       const nameMatch = p.name.toLowerCase().includes(q);
       const descMatch = p.description?.toLowerCase().includes(q);
       const catMatch = p.categoryName?.toLowerCase().includes(q);
-      const matchingVariant = p.variants?.find((v) => v.color.toLowerCase().includes(q));
+      const matchingVariant = p.variants?.find((v) =>
+        v.color.toLowerCase().includes(q),
+      );
 
       if (nameMatch || descMatch || catMatch || matchingVariant) {
         let subtitle = `${p.categoryName} • ৳${(p.discountPrice ?? p.price).toLocaleString()}`;
@@ -266,10 +344,19 @@ export function GlobalSearch() {
       const emailMatch = o.customerEmail?.toLowerCase().includes(q);
       const districtMatch = o.districtName?.toLowerCase().includes(q);
       const matchingItem = o.items?.find(
-        (i) => i.productName.toLowerCase().includes(q) || (i.color && i.color.toLowerCase().includes(q)),
+        (i) =>
+          i.productName.toLowerCase().includes(q) ||
+          (i.color && i.color.toLowerCase().includes(q)),
       );
 
-      if (idMatch || nameMatch || phoneMatch || emailMatch || districtMatch || matchingItem) {
+      if (
+        idMatch ||
+        nameMatch ||
+        phoneMatch ||
+        emailMatch ||
+        districtMatch ||
+        matchingItem
+      ) {
         let subtitle = `৳${o.total.toLocaleString()} • ${o.customerPhone || o.customerName}`;
         let matchedBadge: string | undefined = undefined;
 
@@ -280,7 +367,11 @@ export function GlobalSearch() {
           matchedBadge = o.customerPhone;
         }
 
-        const badgeVariant: "default" | "secondary" | "outline" | "destructive" =
+        const badgeVariant:
+          | "default"
+          | "secondary"
+          | "outline"
+          | "destructive" =
           o.status === "delivered"
             ? "default"
             : o.status === "cancelled"
@@ -328,7 +419,9 @@ export function GlobalSearch() {
       const idMatch = po.id.toLowerCase().includes(q);
       const nameMatch = po.customerName?.toLowerCase().includes(q);
       const phoneMatch = po.customerPhone?.includes(q);
-      const matchingItem = po.items?.find((i) => i.productName.toLowerCase().includes(q));
+      const matchingItem = po.items?.find((i) =>
+        i.productName.toLowerCase().includes(q),
+      );
 
       if (idMatch || nameMatch || phoneMatch || matchingItem) {
         items.push({
@@ -393,10 +486,14 @@ export function GlobalSearch() {
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => (results.length > 0 ? (prev + 1) % results.length : 0));
+      setSelectedIndex((prev) =>
+        results.length > 0 ? (prev + 1) % results.length : 0,
+      );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedIndex((prev) => (results.length > 0 ? (prev - 1 + results.length) % results.length : 0));
+      setSelectedIndex((prev) =>
+        results.length > 0 ? (prev - 1 + results.length) % results.length : 0,
+      );
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (results[selectedIndex]) {
@@ -409,8 +506,14 @@ export function GlobalSearch() {
 
   // Group the results by groupTitle
   const groupedResults = useMemo(() => {
-    const groups: { title: string; items: { item: SearchResultItem; flatIndex: number }[] }[] = [];
-    const map = new Map<string, { item: SearchResultItem; flatIndex: number }[]>();
+    const groups: {
+      title: string;
+      items: { item: SearchResultItem; flatIndex: number }[];
+    }[] = [];
+    const map = new Map<
+      string,
+      { item: SearchResultItem; flatIndex: number }[]
+    >();
 
     results.forEach((item, flatIndex) => {
       const list = map.get(item.groupTitle) ?? [];
@@ -517,8 +620,8 @@ export function GlobalSearch() {
                       No results found for &ldquo;{query}&rdquo;
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
-                      Try searching with another keyword such as a product name, variant color,
-                      order number, phone number, or category.
+                      Try searching with another keyword such as a product name,
+                      variant color, order number, phone number, or category.
                     </p>
                   </div>
                 ) : (
@@ -555,19 +658,27 @@ export function GlobalSearch() {
                                       : "bg-muted text-muted-foreground group-hover:text-foreground"
                                   }`}
                                 >
-                                  <HugeiconsIcon icon={IconComponent} size={16} />
+                                  <HugeiconsIcon
+                                    icon={IconComponent}
+                                    size={16}
+                                  />
                                 </div>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
                                     <span
                                       className={`text-sm font-medium truncate ${
-                                        isSelected ? "text-primary-foreground" : "text-foreground"
+                                        isSelected
+                                          ? "text-primary-foreground"
+                                          : "text-foreground"
                                       }`}
                                     >
                                       {isSelected ? (
                                         item.title
                                       ) : (
-                                        <Highlight text={item.title} query={query} />
+                                        <Highlight
+                                          text={item.title}
+                                          query={query}
+                                        />
                                       )}
                                     </span>
                                     {item.matchedBadge && (
@@ -592,7 +703,10 @@ export function GlobalSearch() {
                                     {isSelected ? (
                                       item.subtitle
                                     ) : (
-                                      <Highlight text={item.subtitle} query={query} />
+                                      <Highlight
+                                        text={item.subtitle}
+                                        query={query}
+                                      />
                                     )}
                                   </p>
                                 </div>
@@ -601,7 +715,11 @@ export function GlobalSearch() {
                               <div className="flex items-center gap-2 shrink-0">
                                 {item.badge && (
                                   <Badge
-                                    variant={isSelected ? "outline" : item.badgeVariant ?? "outline"}
+                                    variant={
+                                      isSelected
+                                        ? "outline"
+                                        : (item.badgeVariant ?? "outline")
+                                    }
                                     className={`text-[10px] px-1.5 py-0 ${
                                       isSelected
                                         ? "border-primary-foreground/40 text-primary-foreground"

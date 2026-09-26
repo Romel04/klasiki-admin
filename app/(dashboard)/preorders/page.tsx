@@ -9,6 +9,7 @@ import {
 } from "@/lib/hooks/use-preorders";
 import { PreorderStatusBadge } from "@/components/preorders/preorder-status-badge";
 import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -35,7 +36,19 @@ export default function PreordersPage() {
 
   if (isPending)
     return (
-      <p className="text-sm text-muted-foreground">Loading pre-orders...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1.5">
+            <div className="h-7 w-28 rounded-md bg-muted/70 animate-pulse" />
+            <div className="h-3.5 w-72 rounded-full bg-muted/70 animate-pulse" />
+          </div>
+          <div className="h-9 w-32 rounded-md bg-muted/70 animate-pulse" />
+        </div>
+        <TableSkeleton
+          columns={["w-32", "w-24", "w-20", "w-20", "w-28", "w-12"]}
+          rows={6}
+        />
+      </div>
     );
   if (error)
     return (

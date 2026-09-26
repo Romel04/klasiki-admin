@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useOrders, useUpdateOrderStatus } from "@/lib/hooks/use-orders";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { Button } from "@/components/ui/button";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -31,7 +32,18 @@ export default function OrdersPage() {
   const updateStatus = useUpdateOrderStatus();
 
   if (isPending)
-    return <p className="text-sm text-muted-foreground">Loading orders...</p>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="h-7 w-20 rounded-md bg-muted/70 animate-pulse" />
+          <div className="h-9 w-28 rounded-md bg-muted/70 animate-pulse" />
+        </div>
+        <TableSkeleton
+          columns={["w-32", "w-24", "w-20", "w-20", "w-28", "w-12"]}
+          rows={6}
+        />
+      </div>
+    );
   if (error)
     return <p className="text-sm text-destructive">Failed to load orders.</p>;
 
@@ -62,69 +74,74 @@ export default function OrdersPage() {
         </Link>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Customer</TableHead>
-            <TableHead>District</TableHead>
-            <TableHead>Source</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders?.map((order) => (
-            <TableRow key={order.id}>
-              <TableCell>
-                <div className="font-medium">{order.customerName}</div>
-                <div className="text-xs text-muted-foreground">
-                  {order.customerPhone}
-                </div>
-              </TableCell>
-              <TableCell>{order.districtName}</TableCell>
-              <TableCell className="capitalize">{order.source}</TableCell>
-              <TableCell>৳{order.total.toLocaleString()}</TableCell>
-              <TableCell>
-                {order.status === "cancelled" ? (
-                  <OrderStatusBadge status={order.status} />
-                ) : (
-                  <Select
-                    value={order.status}
-                    onValueChange={(val) =>
-                      handleStatusChange(order.id, val as OrderStatus)
-                    }
-                    items={ORDER_STATUSES.map((s) => ({ value: s, label: s }))}
-                  >
-                    <SelectTrigger className="h-7 w-[130px] text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ORDER_STATUSES.map((s) => (
-                        <SelectItem
-                          key={s}
-                          value={s}
-                          className="text-xs capitalize"
-                        >
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                <Link
-                  href={`/orders/${order.id}`}
-                  className="text-xs underline"
-                >
-                  View
-                </Link>
-              </TableCell>
+      <div className="bg-card border border-border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Customer</TableHead>
+              <TableHead>District</TableHead>
+              <TableHead>Source</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {orders?.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell>
+                  <div className="font-medium">{order.customerName}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {order.customerPhone}
+                  </div>
+                </TableCell>
+                <TableCell>{order.districtName}</TableCell>
+                <TableCell className="capitalize">{order.source}</TableCell>
+                <TableCell>৳{order.total.toLocaleString()}</TableCell>
+                <TableCell>
+                  {order.status === "cancelled" ? (
+                    <OrderStatusBadge status={order.status} />
+                  ) : (
+                    <Select
+                      value={order.status}
+                      onValueChange={(val) =>
+                        handleStatusChange(order.id, val as OrderStatus)
+                      }
+                      items={ORDER_STATUSES.map((s) => ({
+                        value: s,
+                        label: s,
+                      }))}
+                    >
+                      <SelectTrigger className="h-7 w-[130px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ORDER_STATUSES.map((s) => (
+                          <SelectItem
+                            key={s}
+                            value={s}
+                            className="text-xs capitalize"
+                          >
+                            {s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Link
+                    href={`/orders/${order.id}`}
+                    className="text-xs underline"
+                  >
+                    View
+                  </Link>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

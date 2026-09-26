@@ -6,7 +6,11 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { login } from "@/lib/api/auth";
-import { setAccessToken, setRefreshToken } from "@/lib/auth/token-store";
+import {
+  setAccessToken,
+  setRefreshToken,
+  setCurrentUser,
+} from "@/lib/auth/token-store";
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -30,8 +34,9 @@ export default function LoginPage() {
     setError(null);
     try {
       const auth = await login(data.email, data.password);
-      setAccessToken(auth.accessToken);
+      setAccessToken(auth.accessToken, auth.accessTokenExpiresAt);
       setRefreshToken(auth.refreshToken, auth.refreshTokenExpiresAt);
+      setCurrentUser(auth.userData);
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

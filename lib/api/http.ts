@@ -1,4 +1,4 @@
-import { getAccessToken, setAccessToken, getRefreshToken, setRefreshToken, clearAuth } from "@/lib/auth/token-store";
+import { getAccessToken, setAccessToken, getRefreshToken, setRefreshToken, setCurrentUser, clearAuth } from "@/lib/auth/token-store";
 import { refreshTokens } from "@/lib/api/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -10,8 +10,9 @@ async function doRefresh(): Promise<string | null> {
   if (!rt) return null;
   try {
     const data = await refreshTokens(rt);
-    setAccessToken(data.accessToken);
+    setAccessToken(data.accessToken, data.accessTokenExpiresAt);
     setRefreshToken(data.refreshToken, data.refreshTokenExpiresAt);
+    setCurrentUser(data.userData);
     return data.accessToken;
   } catch {
     clearAuth();
@@ -20,14 +21,21 @@ async function doRefresh(): Promise<string | null> {
 }
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const token = getAccessToken();
+  let token = getAccessToken();
+
+  // If there's no valid access token but we have a refresh token, refresh before sending an unauthenticated request
+  if (!token && getRefreshToken()) {
+    refreshPromise ??= doRefresh().finally(() => { refreshPromise = null; });
+    token = await refreshPromise;
+  }
+
   const headers = new Headers(init.headers);
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
   let res = await fetch(`${API_URL}${path}`, { ...init, headers });
 
   if (res.status === 401) {
-    // Multiple calls can 401 at once on reload — only refresh once, let the rest wait on it.
+    // Multiple calls can 401 at once on expiry — only refresh once, let the rest wait on it.
     refreshPromise ??= doRefresh().finally(() => { refreshPromise = null; });
     const newToken = await refreshPromise;
 
